@@ -1,0 +1,137 @@
+<!--
+ID: 14068171
+Teh Yule Kim
+12/10/2018
+
+https://www.w3schools.com/howto/howto_js_image_grid.asp
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gallery</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="../index.css">
+    <link rel="stylesheet" type="text/css" href="gallery.css">
+    <style>
+
+
+    </style>
+
+</head>
+<body>
+
+<div id="sidebar" class="sidebar">
+    <header>
+        <a id="homelogo" href="../index.html">
+            <img src="../image/Supernova%20Elements.png" alt="Supernova Elements" style="width: 320px;height: 200px;">
+        </a>
+        <input type="text" placeholder="Search bar">
+    </header>
+
+
+    <div id="navigation">
+        <div id="addressbar">
+            <ul class="breadcrumb">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="multimedia.html">Multimedia</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+            </ul>
+        </div>
+        <nav id="nav1">
+            <a href="multimedia.html" class="active">Multimedia</a>
+            <a href="database.html">Database</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+
+
+        <nav id="nav2">
+            <a href="sound.html">Sound</a>
+            <a href="gallery.html" class="active">Gallery</a>
+            <a href="video.html">Video</a>
+
+        </nav>
+    </div>
+
+    <footer>
+        <img src="../image/profile%20settings.png" alt="Profile Settings" style="width: 320px;height: 71px;">
+    </footer>
+</div>
+
+<div id="content" class="content">
+    <main id="main">
+        <article>
+                <h1> Galaxy Gallery </h1>
+
+                <!-- Header -->
+                <div class="header" id="myHeader">
+                    <h1>Image Grid</h1>
+                    <p>Code copied straight from w3schools.com.<br> I collected the pictures.</p>
+                    <button class="btn" onclick="one()">1</button>
+                    <button class="btn active" onclick="two()">2</button>
+                    <button class="btn" onclick="four()">4</button>
+                </div>
+
+                <!-- Photo Grid -->
+                <div class="row">
+                    <div class="column">
+                        <img src="../image/Carina_Nebula.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic0506a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic0601a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic0602a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic0719a.jpg" alt="galaxy" style="width:100%">
+
+
+                    </div>
+                    <div class="column">
+                        <img src="../image/heic1302a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic1316b.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic1411a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic1509a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic1520a.jpg" alt="galaxy" style="width:100%">
+
+
+                    </div>
+                    <div class="column">
+                        <img src="../image/hs-2009-25-f-2048x1280_wallpaper.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/orion_nebula_in_the_infrared_20130306_1502477435-1.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/potw1345a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/potw1536a.jpg" alt="galaxy" style="width:100%">
+
+
+
+                    </div>
+                    <div class="column">
+                        <img src="../image/stsci-h-p1821a-m-1699x2000.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/heic1110a.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/landscape%20in%20the%20Carina%20Nebula.jpg" alt="galaxy" style="width:100%">
+                        <img src="../image/Galactic%20Center.jpg" alt="galaxy" style="width:100%">
+
+
+                    </div>
+                </div>
+
+
+        </article>
+    </main>
+
+
+    <aside class="aside">
+        <p>supernovaelements@email.com</p>
+        <p>ADVERTISEMENTS</p>
+    </aside>
+</div>
+
+<script src="../index.js"></script>
+<script src="gallery.js"></script>
+<script>
+
+
+</script>
+
+
+</body>
+</html>

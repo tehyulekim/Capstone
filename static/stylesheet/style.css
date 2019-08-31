@@ -1,0 +1,36 @@
+body {
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background-color: black;
+  color: lightgray;
+}
+
+a {
+  color: #00B7FF;
+}
+
+
+main {
+  min-height: calc(100vh - 50px);
+  padding: 24px;
+
+  border: thin solid
+}
+
+table {
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+
+th, td {
+    border: 1px solid gray;
+    text-align: center;
+    width:60px;
+    height:60px;
+    overflow: hidden;
+}
+
