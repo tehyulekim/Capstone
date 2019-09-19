@@ -1,0 +1,21 @@
+https://data.heroku.com/datastores/83eea629-a4b9-4038-9794-13b16504915d#administration
+
+
+postgres://yijwjkfpucdepl:76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788@ec2-54-221-214-3.compute-1.amazonaws.com:5432/del3ceijjamsso
+
+
+
+Host
+ec2-54-221-214-3.compute-1.amazonaws.com
+Database
+del3ceijjamsso
+User
+yijwjkfpucdepl
+Port
+5432
+Password
+76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788
+URI
+postgres://yijwjkfpucdepl:76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788@ec2-54-221-214-3.compute-1.amazonaws.com:5432/del3ceijjamsso
+Heroku CLI
+heroku pg:psql postgresql-slippery-51327 --app capstoneherokuapp
