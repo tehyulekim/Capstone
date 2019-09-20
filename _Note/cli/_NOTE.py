@@ -12,5 +12,54 @@ if sys.argv == 2:
     print(222)
 
 
-"""
 
+
+s1= '123'
+s2= '.zip'
+s3= s1 +s2
+print("s3 = ", s3)
+print("stnd", "stnd")
+
+print("stnd"+str(3))
+
+
+
+def f1(x,*y):
+    print(list(y))
+
+f1(1,2,3,4,5)
+
+
+
+
+# compress and upload
+def cu(name, version, input_files):
+
+    logging.info("function cu")
+
+    name_zip = name + "_" + str(version) + ".zip"
+
+    with ZipFile(name_zip, 'w') as file:
+        file.write(input_files)
+        print('zipfile write complete')
+
+    with ZipFile(name_zip) as file:
+        print(file.namelist())
+        
+        
+# download and extract
+def de(name, version, target_dir='.'):
+    logging.info("function de")
+
+    name_zip = name + "_" + str(version) + ".zip"
+    
+    extract(name_zip, target_dir)
+
+    with ZipFile(name_zip) as file:
+        print(file.namelist())
+        file.printdir()
+        file.extractall()
+        print('zipfile extract complete')
+
+
+"""
