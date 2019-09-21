@@ -1,11 +1,23 @@
 ""r"""
 
+use aws cli to login and configure access keys
+
+
+https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-example-creating-buckets.html
+
+
+
+
 """
-from zipfile import ZipFile
 
 
-def extract(src, curdir):
-    with ZipFile(src, 'r') as zf:
-        zf.extractall(curdir)
+# Retrieve the list of existing buckets
+import boto3
 
-extract('test.zip', '.')
+s3 = boto3.client('s3')
+response = s3.list_buckets()
+
+# Output the bucket names
+print('Existing buckets:')
+for bucket in response['Buckets']:
+    print(f'  {bucket["Name"]}')

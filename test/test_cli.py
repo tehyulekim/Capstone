@@ -8,8 +8,14 @@ test each function
 
     test_zip(name_zip)
     extract(name_zip, target_dir)
-"""
 
+
+
+TODO test upload
+upload_file('test.txt', 'capstones3bucket')
+
+
+"""
 import cli
 
 

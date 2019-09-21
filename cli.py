@@ -1,14 +1,21 @@
 ""r"""
-need to append file for multiple file zipping
+
+must configure constants:
+BUCKET
+
 """
 
 import os
 import logging
 from zipfile import ZipFile
 
+import boto3
 import fire
+from botocore.exceptions import ClientError
 
-logging.basicConfig(level=logging.DEBUG)  # comment this to turn off debug and info messages
+logging.basicConfig(level=logging.INFO)  # comment out to turn off info messages
+
+BUCKET = 'capstones3bucket'
 
 
 # compress and upload
@@ -17,50 +24,81 @@ def cu(name, version, *files):
     $ python cli.py cu <name> <version> <*files>
 
     Example: will create z_1.zip containing folder1 and README.md
-    $ python cli.py cu z 1 folder1 README.md
+    $ python cli.py cu z v1 folder1 README.md
 
 
     :param name:
     :param version:
     :param files:
-    :return:
+    :return: True when success, False when failure
     """
-    logging.info("function cu")
+    logging.info("function cu()")
 
-    name_zip = name + "_" + str(version) + ".zip"
+    name_zip = name + "_v" + str(version) + ".zip"
 
-    compress(name_zip, *files)
-    list_zip(name_zip)
+    try:
+        # Compress
+        compress(name_zip, *files)
+        # list_zip(name_zip) # prints list of files inside zip. Comment to turn off
+
+        # ? delete zipped file
+    except Exception as e:
+        logging.error(e)
+        return False
+
+    try:
+        # Upload
+        upload(name_zip, BUCKET)
+    except Exception as e:
+        logging.error(e)
+        return False
+
+    print(name_zip, "is compressed and uploaded to:", BUCKET)
+    return True
 
 
 # download and extract
-def de(name, version, target_dir='.'):
+def de(name, version, target_dir='./download'):
     """
     $ python cli.py de <name> <version> <target_dir>
 
-    EXAMPLE:  will extract z_1.zip to folder1
-    $ python cli.py de z 1 folder1
-
-
-    $ python cli.py de z 1 ~/Desktop/folder2
+    EXAMPLE:  will extract z_1.zip to ./download/folder1
+    $ python cli.py de z 1 ./download/folder1
 
 
     :param name:
     :param version:
     :param target_dir:
-    :return:
+    :return: True if success, False if failure
     """
-    logging.info("function de")
+    logging.info("function de()")
 
-    name_zip = name + "_" + str(version) + ".zip"
+    name_zip = name + "_v" + str(version) + ".zip"
 
-    test_zip(name_zip)
-    extract(name_zip, target_dir)
+    try:
+        # Download
+        download(BUCKET, name_zip)
 
+    except Exception as e:
+        logging.error(e)
+        return False
+
+    try:
+        # Extract
+        test_zip(name_zip)  # test if downloaded file is valid zip file
+        extract(name_zip, target_dir)
+    except Exception as e:
+        logging.error(e)
+        return False
+
+    print(name_zip, "is downloaded from:", BUCKET, "and extracted to:", target_dir)
+    return True
+
+
+# commandline zipfile source code modified from zipfile.py in https://docs.python.org/3/library/zipfile.html
+# to write: compress(), extract(), test_zip, list_zip
 
 # Create zipfile from source files.
-# commandline zipfile -c in https://docs.python.org/3/library/zipfile.html
-# source code modified from zipfile.py. recursive function.
 def compress(zip_name, *files):
     def add_to_zip(zf, path, zippath):
         if os.path.isfile(path):
@@ -94,7 +132,7 @@ def test_zip(src):
         bad_file = zf.testzip()
     if bad_file:
         print("The following enclosed file is corrupted: {!r}".format(bad_file))
-    print("Done testing")
+    print(src, "Done testing: zipfile is valid")
 
 
 # List files in a zipfile.
@@ -103,14 +141,58 @@ def list_zip(src):
         zf.printdir()
 
 
-def upload():
-    logging.info("function up")
-    pass
+# https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-uploading-files.html
+def upload(file_name, bucket, object_name=None):
+    """Upload a file to an S3 bucket
+
+    EXAMPLE
+    upload('test.zip', 'capstones3bucket')
+
+    :param file_name: File to upload
+    :param bucket: Bucket to upload to
+    :param object_name: S3 object name. If not specified then file_name is used
+    :return: True if file was uploaded, else False
+    """
+
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = file_name
+
+    # Upload the file
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.upload_file(file_name, bucket, object_name)
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
 
 
-def download():
-    logging.info("function down")
-    pass
+# https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-example-download-file.html
+# modified to match upload() style
+def download(bucket, object_name, file_name=None):
+    """Download file from S3 bucket
+
+    EXAMPLE
+    download('test.txt', 'capstones3bucket', './download/test.txt')
+
+    :param bucket:
+    :param object_name:
+    :param file_name:
+    :return: True if downloaded, False if failed
+    """
+    # If S3 file_name was not specified, use object_name
+    if file_name is None:
+        file_name = object_name
+
+    # Download file
+    s3 = boto3.client('s3')
+    try:
+        s3.download_file(bucket, object_name, file_name)
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
 
 
 def f1():
