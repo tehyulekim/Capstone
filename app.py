@@ -1,4 +1,9 @@
-from flask import Flask, request, render_template
+""r"""
+
+using print() to debug because logging makes too many TypeError: not all arguments converted during string formatting
+
+"""
+from flask import Flask, request, render_template, json, jsonify, g
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -17,9 +22,61 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
+# add component
+# http://127.0.0.1:5000/a
+@app.route('/a', methods=['POST', 'GET'])
+def add():
+    if request.method == 'POST':
+        component = json.loads(request.data)  # {'name': name, 'version': version} # <class 'dict'>
+
+        return request.data
+
+    return '/a page text message'
 
 
+# bring recipe
+# http://127.0.0.1:5000/b
+@app.route('/b', methods=['POST', 'GET'])
+def bring():
+    c1 = {'name': 'z', 'version': '1'}
+    c2 = {'name': 'x', 'version': '2'}
+    product1 = {'Name': 'product1'}
 
+    # recipe == software release
+    r1 = {
+        'Product': product1,
+        'Version Number': '1.2.3.4',
+        'Status': 'In Development',
+        'component_list': [
+            c1,
+            c2
+        ]
+    }
+
+    return json.dumps(r1)
+
+
+# save component > SQL, and create new recipe
+# http://127.0.0.1:5000/c
+@app.route('/c', methods=['POST', 'GET'])
+def create():
+    d1 = {'11': 111, '22': 222}
+
+    j1 = json.dumps(d1)
+
+    if request.method == 'POST':
+        pass
+
+    return j1
+
+
+# http://127.0.0.1:5000/r
+@app.route('/r', methods=['POST', 'GET'])
+def recipe():
+    if request.method == 'POST':
+        return request.data
+
+    return 'r page text message'
 
 
 @app.route('/')

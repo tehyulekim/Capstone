@@ -7,15 +7,16 @@ BUCKET
 
 import os
 import logging
-from zipfile import ZipFile
-
-import boto3
+import requests
 import fire
+import boto3
 from botocore.exceptions import ClientError
+from zipfile import ZipFile
 
 logging.basicConfig(level=logging.INFO)  # comment out to turn off info messages
 
 BUCKET = 'capstones3bucket'
+URL = 'http://127.0.0.1:5000'
 
 
 # compress and upload
@@ -49,6 +50,7 @@ def cu(name, version, *files):
     try:
         # Upload
         upload(name_zip, BUCKET)
+        post_component(name, version)
     except Exception as e:
         logging.error(e)
         return False
@@ -199,6 +201,13 @@ def f1():
     logging.info("function f1")
     return 1
 
+
+def post_component(name, version):
+    component = {'name': name, 'version': version}
+
+    url = URL + '/a'
+    r = requests.post(url, json=component)
+    logging.info("r.text = ", r.text)
 
 if __name__ == '__main__':
     fire.Fire()
