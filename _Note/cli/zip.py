@@ -108,5 +108,17 @@ def f4(zip_name, *files):
             addToZip(zf, path, zippath)
 
 
+# https://docs.python.org/3/library/zipfile.html#zipfile.ZipFile.write
+# writes zip file with dir name, folder structure
+def f5():
+    with ZipFile(file_name, 'w') as file:
+        file.write('test.txt', arcname='a/11/test.txt')
+        print('File overrides the existing files')
+
+    with ZipFile(file_name) as file:
+        print(file.namelist())
+
+
 if __name__ == '__main__':
     fire.Fire()
+    f5()
