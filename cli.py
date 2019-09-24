@@ -9,13 +9,12 @@ DOWNLOAD_PATH
 
 import os
 import logging
-from pathlib import Path
-
 import requests
 import fire
 import boto3
 from botocore.exceptions import ClientError
 from zipfile import ZipFile
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)  # comment out to turn off info messages
 
@@ -73,7 +72,7 @@ def cu(name, version, *files):
 
 
 # recipe download and extract
-def rde(product_name, version_number):
+def rde(product_name, version_number, output_folder=DOWNLOAD_PATH):
     """
     $ python cli.py rde <product> <version>
 
@@ -89,7 +88,7 @@ def rde(product_name, version_number):
 
     for component in recipe['component_list']:
         print(component)
-        de(component['name'], component['version'])
+        de(component['name'], component['version'], output_folder.joinpath(Path(component['name']).parent))
 
 
 # component download and extract to target directory
@@ -113,7 +112,7 @@ def de(name, version, target_dir=DOWNLOAD_PATH):
 
     name_zip = name + "__v" + str(version) + ".zip"
 
-    file_name = target_dir.joinpath(name_zip).as_posix()
+    file_name = Path(target_dir).joinpath(name_zip).as_posix()
 
     try:
         # Download
@@ -129,8 +128,8 @@ def de(name, version, target_dir=DOWNLOAD_PATH):
 
     finally:
         # delete zip file
-        if Path(name_zip).exists():
-            Path(name_zip).unlink()
+        if Path(file_name).exists():
+            Path(file_name).unlink()
 
     logging.info(name_zip + " is downloaded from: " + BUCKET + " and extracted to: " + str(target_dir))
 
