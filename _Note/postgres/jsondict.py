@@ -65,7 +65,6 @@ print(y["age"])
 
 """
 import json
-
 x = json.dumps(
     {
         'k1': 'v1',

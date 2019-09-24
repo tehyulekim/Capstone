@@ -17,3 +17,11 @@ logging.warning("warning message")
 
 logger = logging.getLogger()
 logger.info("first logger info message", )
+
+
+text = "stnwfaei"
+logging.debug("text = " + str(text))
+logging.debug("text = " + text)
+
+
+print("text = " + str(text))

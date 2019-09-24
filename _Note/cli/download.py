@@ -19,8 +19,8 @@ s3.meta.client.download_file('mybucket', 'hello.txt', '/tmp/hello.txt')
 import boto3
 
 BUCKET_NAME = "capstones3bucket"
-OBJECT_NAME = "capstones3bucket.txt"  # at S3
-FILE_NAME = "capstones3bucket.txt"  # at local file
+OBJECT_NAME = "product1/x_v1.zip"  # at S3
+FILE_NAME = "product1/x_v1.zip"  # at local file. Must create folder
 
 # OBJECT_NAME, FILE_NAME = "f1"
 
