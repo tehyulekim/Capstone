@@ -64,10 +64,9 @@ import fire
 file_name = 'test.zip'
 
 
-def f1():
+def f1(file_name):
     with ZipFile(file_name, 'w') as file:
-        file.write('test.jpg')
-        print('File overrides the existing files')
+        file.write('test.txt')
 
     with ZipFile(file_name) as file:
         print(file.namelist())
@@ -119,6 +118,15 @@ def f5():
         print(file.namelist())
 
 
+#   f6('f1/z.zip')
+# must create directory first
+def f6(file_name1):
+    with ZipFile(file_name1, 'w') as file:
+        file.write('test.txt')
+
+    with ZipFile(file_name1) as file:
+        print(file.namelist())
+
+
 if __name__ == '__main__':
     fire.Fire()
-    f5()
