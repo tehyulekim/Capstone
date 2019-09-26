@@ -3,23 +3,43 @@
 using print() to debug because logging makes too many TypeError: not all arguments converted during string formatting
 
 """
-from flask import Flask, request, render_template, json, jsonify, g
+from flask import Flask, request, render_template, json
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
 app.config[
     'SQLALCHEMY_DATABASE_URI'] = 'postgres://yijwjkfpucdepl:76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788@ec2-54-221-214-3.compute-1.amazonaws.com:5432/del3ceijjamsso'
+
 db = SQLAlchemy(app)
 
+# from app import db, Association,Parent,Child
+class Association(db.Model):
+    __tablename__ = 'association'
+    left_id = db.Column(db.Integer, db.ForeignKey('left.id'), primary_key=True)
+    right_id = db.Column(db.Integer, db.ForeignKey('right.id'), primary_key=True)
+    extra_data = db.Column(db.String(50))
+    child = db.relationship("Child")
 
-class User(db.Model):
+
+class Parent(db.Model):
+    __tablename__ = 'left'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    children = db.relationship("Association")
 
-    def __repr__(self):
-        return '<User %r>' % self.username
+
+class Child(db.Model):
+    __tablename__ = 'right'
+    id = db.Column(db.Integer, primary_key=True)
+
+
+db.create_all()
+
+r"""
+from app import db, Softwarerelease,Component,Recipe
+
+
+"""
 
 
 # add component
@@ -104,6 +124,17 @@ def f3():
 @app.route('/4')
 def f4():
     return render_template('page4.html')
+
+
+@app.route('/5')
+def f5():
+    return alchemy.f1()
+
+
+@app.route('/dbca')
+def dbca():
+    db.create_all()
+    return 'db.create_all()'
 
 
 if __name__ == '__main__':
