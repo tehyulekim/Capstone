@@ -13,30 +13,85 @@ app.config[
 
 db = SQLAlchemy(app)
 
-# from app import db, Association,Parent,Child
+db.drop_all()
+
+
+class Product(db.Model):
+    name = db.Column(db.String(255), primary_key=True)
+    software_releases = db.relationship("SoftwareRelease", back_populates="product")
+
+
+class SoftwareRelease(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(255), db.ForeignKey('product.name'))
+    version_number = db.Column(db.String(255))
+    status = db.Column(db.String(255))
+    __table_args__ = (db.UniqueConstraint('product_name', 'version_number'),)
+    product = db.relationship("Product", back_populates="software_releases")
+    components = db.relationship("Association", back_populates="software_release")
+
+
+class Component(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    version = db.Column(db.String(255))
+    __table_args__ = (db.UniqueConstraint('name', 'version'),)
+    software_releases = db.relationship("Association", back_populates="component")
+
+
+# Association object for SoftwareRelease and Component. Includes extra column: Destination path
 class Association(db.Model):
-    __tablename__ = 'association'
-    left_id = db.Column(db.Integer, db.ForeignKey('left.id'), primary_key=True)
-    right_id = db.Column(db.Integer, db.ForeignKey('right.id'), primary_key=True)
-    extra_data = db.Column(db.String(50))
-    child = db.relationship("Child")
-
-
-class Parent(db.Model):
-    __tablename__ = 'left'
-    id = db.Column(db.Integer, primary_key=True)
-    children = db.relationship("Association")
-
-
-class Child(db.Model):
-    __tablename__ = 'right'
-    id = db.Column(db.Integer, primary_key=True)
+    software_release_id = db.Column(db.Integer, db.ForeignKey('software_release.id'), primary_key=True)
+    component_id = db.Column(db.Integer, db.ForeignKey('component.id'), primary_key=True)
+    destination = db.Column(db.String(65535))
+    component = db.relationship("Component", back_populates="software_releases")
+    software_release = db.relationship("SoftwareRelease", back_populates="components")
 
 
 db.create_all()
 
 r"""
-from app import db, Softwarerelease,Component,Recipe
+from app import db, Product, SoftwareRelease,Component, Association
+
+Product.query.all()
+SoftwareRelease.query.all()
+Component.query.all()
+
+p1 = Product(name="p1")
+db.session.add(p1)
+p2 = Product(name="p2")
+db.session.add(p2)
+
+
+s1 = SoftwareRelease(product_name="p1", version_number="1")
+db.session.add(s1)
+
+s2 = SoftwareRelease(product_name="p2", version_number="1")
+db.session.add(s2)
+
+
+db.session.add(Component())
+db.session.add(Component())
+
+
+
+c1 = Component.query.filter_by(id=1).first()
+
+s1 = SoftwareRelease.query.filter_by(id=1).first()
+s2 = SoftwareRelease.query.filter_by(id=2).first()
+
+
+s1.name= "s1"
+s1.version = 1
+
+
+
+
+db.session.rollback()
+db.drop_all()
+
+db.engine.table_names()
+
 
 
 """
@@ -128,7 +183,8 @@ def f4():
 
 @app.route('/5')
 def f5():
-    return alchemy.f1()
+    pass
+    # return alchemy.f1()
 
 
 @app.route('/dbca')
