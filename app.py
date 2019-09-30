@@ -53,9 +53,16 @@ db.create_all()
 r"""
 from app import db, Product, SoftwareRelease,Component, Association
 
+p = Product.query.all()
+s = SoftwareRelease.query.all()
+c = Component.query.all()
+a = Association.query.all()
+
+
 Product.query.all()
 SoftwareRelease.query.all()
 Component.query.all()
+Association.query.all()
 
 p1 = Product(name="p1")
 db.session.add(p1)
@@ -69,9 +76,56 @@ db.session.add(s1)
 s2 = SoftwareRelease(product_name="p2", version_number="1")
 db.session.add(s2)
 
+c1 = Component(name="p1", version="1")
+db.session.add(c1)
+c2 = Component(name="p2", version="1")
+db.session.add(c2)
 
-db.session.add(Component())
-db.session.add(Component())
+db.session.commit()
+
+
+
+
+
+# create association (1,2)
+
+a1 = Association()
+a1.component = c1
+s1.components.append(a1)
+db.session.commit()
+
+
+a2 = Association()
+a2.component = c2
+s2.components.append(a2)
+db.session.commit()
+
+
+
+a2 = Association.query.filter_by(software_release_id=2, component_id=2).first()
+db.session.delete(a2)
+db.session.commit()
+
+
+
+
+
+https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html
+
+# create parent, append a child via association
+p = Parent()
+a = Association(extra_data="some data")
+a.child = Child()
+p.children.append(a)
+
+# iterate through child objects via association, including association
+# attributes
+for assoc in p.children:
+    print(assoc.extra_data)
+    print(assoc.child)
+
+
+
 
 
 
@@ -154,6 +208,46 @@ def recipe():
         return request.data
 
     return 'r page text message'
+
+
+# view all
+# http://127.0.0.1:5000/v
+@app.route('/v', methods=['POST', 'GET'])
+def view():
+    if request.method == 'POST':
+        return request.data
+
+    pquery = Product.query.all()
+    squery = SoftwareRelease.query.all()
+    cquery = Component.query.all()
+    aquery = Association.query.all()
+
+    plist = []
+    for p in pquery:
+        plist.append(p.name)
+
+    slist = []
+    for s in squery:
+        slist.append(s.product_name + s.version_number)
+
+    clist = []
+    for c in cquery:
+        clist.append(c.name)
+
+    alist = []
+    for a in aquery:
+        alist.append(a.software_release_id + a.component_id)
+
+    viewall = {
+        "Product": str(plist),
+        "SoftwareRelease": str(slist),
+        "Component": str(clist),
+        "Association": str(alist)
+    }
+
+    viewall_json = json.dumps(viewall)
+
+    return viewall_json
 
 
 @app.route('/')
