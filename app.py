@@ -28,7 +28,7 @@ class SoftwareRelease(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(255), db.ForeignKey('product.name'))
     version_number = db.Column(db.String(255))
-    status = db.Column(db.String(255), default='In Dev')
+    status = db.Column(db.String(255), default='In Development')
     __table_args__ = (db.UniqueConstraint('product_name', 'version_number'),)
     product = db.relationship("Product", back_populates="software_releases")
     components = db.relationship("Association", back_populates="software_release", cascade="all, delete, delete-orphan")
@@ -376,21 +376,6 @@ def index():
 @app.route('/1')
 def f1():
     return render_template('page1.html')
-
-
-@app.route('/2')
-def f2():
-    return render_template('page2.html')
-
-
-@app.route('/3')
-def f3():
-    return render_template('page3.html')
-
-
-@app.route('/4')
-def f4():
-    return render_template('page4.html')
 
 
 @app.route('/5')
