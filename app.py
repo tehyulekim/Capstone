@@ -341,6 +341,7 @@ def cname():
         "component_names": str(cname_list),
     }
 
+
     return json.dumps(cname_dict)
 
 
@@ -378,10 +379,15 @@ def f1():
     return render_template('page1.html')
 
 
-@app.route('/5')
+@app.route('/5', methods=['POST', 'GET'])
 def f5():
-    pass
-    # return alchemy.f1()
+    if request.method == 'POST':
+        logging.info(request.data)
+        logging.debug("type(request.data) = " + str(type(request.data)))
+        logging.debug("request.data = " + str(request.data))
+        return request.data
+    return "f5"
+
 
 
 @app.route('/dbca')
