@@ -1,7 +1,7 @@
 ""r"""
 
 """
-from flask import Flask, request, render_template, json, jsonify, redirect, url_for
+from flask import Flask, request, json, jsonify, redirect, render_template, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 
 import logging
@@ -169,7 +169,9 @@ db.engine.table_names()
 
 @app.route('/')
 def index():
-    # return render_template('index.html')  # Not using template engine
+    # Not using template engine
+    # return render_template('index.html')
+    # Must force hard reload in browser CTRL+F5 to use updated static files
     return redirect("/static/index.html")
 
 
@@ -374,28 +376,36 @@ def cversion():
     return 'cversion is POST. request body example: {"name": "component_name"}'
 
 
-
-@app.route('/1')
-def f1():
-    return render_template('static/html/page1.html')
-
-
-@app.route('/2')
-def f2():
-
-    return url_for('static', filename='style.css')
-
-
-
 @app.route('/5', methods=['POST', 'GET'])
 def f5():
     if request.method == 'POST':
         logging.info(request.data)
         logging.debug("type(request.data) = " + str(type(request.data)))
         logging.debug("request.data = " + str(request.data))
+        logging.debug("request.form = " + str(request.form))
+
         return request.data
     return "f5"
 
+
+@app.route('/6', methods=['POST', 'GET'])
+def f6():
+    if request.method == 'POST':
+        logging.info(request.data)
+        logging.debug("type(request.data) = " + str(type(request.data)))
+        logging.debug("request.data = " + str(request.data))
+        logging.debug("request.form = " + str(request.form))
+        logging.debug("type(request.form) = " + str(type(request.form)))
+
+        form1 = request.form.to_dict()
+
+        form1['name1']
+
+        logging.debug("type(form1) = " + str(type(form1)))
+        logging.debug("form1 = " + str(form1))
+
+        return str(form1)
+    return "f6"
 
 
 if __name__ == '__main__':

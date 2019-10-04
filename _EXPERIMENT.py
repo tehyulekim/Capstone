@@ -24,3 +24,5 @@ print("y = " + str(y))
 
 for k in x:
     print(k)
+
+

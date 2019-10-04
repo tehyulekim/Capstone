@@ -1,29 +1,23 @@
 <!DOCTYPE html>
 <!--
-home page has site map
-
-
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Index Page</title>
+  <title>Component Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link rel="stylesheet" href="stylesheet/style.css"/>
-  <style></style>
 </head>
 <body>
 <div id="sidebar" class="sidebar">
   <header>
     <a id="homelogo" href="index.html">
-      Home page Logo
+      Home Logo
     </a>
     <label>
       <!--      <input type="text" placeholder="Search bar">-->
     </label>
   </header>
-
 
   <div id="navigation">
     <div id="addressbar">
@@ -34,101 +28,116 @@ home page has site map
     </div>
 
     <nav id="nav1">
-      <a href="index.html" class="active">Home</a>
-
-    </nav>
-
-
-    <nav id="nav2">
-
-      <a href="">Components</a>
-      <a href="">Products</a>
-      <a href="">Software Releases</a>
-      <a href=""></a>
-
-    </nav>
-
-    <nav id="nav3">
-      <a onclick="f6()">Component Search</a>
-      <a onclick="">Component Search by Software Release</a>
-      <a onclick="">New Component</a>
-      <a onclick="">Edit Component</a>
-      <a onclick="">Delete Component</a>
-
-
-      <a onclick="">Products Search</a>
-      <a onclick="">New Product</a>
-      <a onclick="">Edit Product</a>
-
-      <a onclick="">Software Release Search</a>
-      <a onclick="">Software Release Search by Component</a>
+      <!--      <a href="index.html" class="active">Home</a>-->
+      <!--      include list and search -->
+      <a onclick="">Products</a>
       <a onclick="">New</a>
       <a onclick="">Edit</a>
       <a onclick="">Delete</a>
+    </nav>
 
-      <a onclick=""></a>
+    <nav id="nav2">
+      <a onclick="">Components</a>
+      <a onclick="">New</a>
+      <a onclick="">Edit</a>
+      <a onclick="">Delete</a>
+      <a onclick="">Search by Software Release</a>
+    </nav>
 
+    <nav id="nav3">
+      <a onclick="">Software Releases</a>
+      <a onclick="">New</a>
+      <a onclick="">Edit</a>
+      <a onclick="">Delete</a>
+      <a onclick="">Search by Component</a>
     </nav>
   </div>
 
-  <footer>
-  </footer>
+  <footer></footer>
 </div>
 
 
 <div id="content" class="content">
   <main id="main">
-    <article>
-      <h1>Article Heading</h1>
-
-    </article>
     <section>
       <h1>Section heading</h1>
-
       <br/>
+      <button type="button" onclick="">Test Button 1</button>
+      <button type="button" onclick="">Test Button 2</button>
       <button type="button" onclick="">Test Button 3</button>
       <button type="button" onclick="">Test Button 4</button>
-      <button type="button" onclick="">Test Button 5</button>
+      <button type="button" onclick=f5()>Test Button 5</button>
       <button type="button" onclick="">Test Button 6</button>
 
-
-      <div id="id"></div>
-      <div id="id1"></div>
-      <div id="id2"></div>
-      <div id="id3"></div>
+      <div id="id1">1</div>
+      <div id="id2">2</div>
+      <div id="id3">3</div>
+      <div id="id4">4</div>
+      <div id="id5">5</div>
+      <div id="id6">6</div>
 
       <br/>
+
+    </section>
+
+    <section>
+      <h1>Vue App</h1>
+
 
       <div id="app">
         <ul>
           <li v-for="product in products">
-            [[ message ]]
-            [[product ]]
+            [[ product ]]
             [[ product.name ]]
+            [[ product.property]]
+            [[ message ]]
           </li>
         </ul>
+
+
+        <label>
+          <input type="text" v-model="message">
+          [[ message ]]
+          {{ message }}
+
+        </label>
+
+
+        Component changes
+        <ul>
+          <li v-for="component_name in component_names">
+            [[ component_name ]]
+          </li>
+        </ul>
+        [[ component_names ]]
+
+        force reload force hard reload EDIT1 EDIT2 EDIT3 Edit4 When in debug mode, no need to hard reload. or is it
+
+
       </div>
 
     </section>
 
     <section>
-      <h1>Section heading</h1>
+      <h1>HTML form input</h1>
+      <form action="http://127.0.0.1:5000/6" method="post">
+        <label>
+          <input type="text" name="name1" value="v1">
+          <input type="text" name="name2" value="v2">
+          <input type="text" name="name3" value="v3">
+          <input type="submit" value="Submit">
+        </label>
+      </form>
 
+      <form onsubmit="f1()">
+        <label for="text1">text1 label</label>
+        <input type="text" id="text1">
+      </form>
 
-      <br/>
-      <button type="button" onclick=f5()>Test Button 5</button>
-      <br/>
-      <div id="id5"></div>
-      <div id="id6">element id6</div>
-
-      <br/>
 
     </section>
   </main>
-
-
-  <aside class="aside">
-  </aside>
+  <aside class="aside"></aside>
 </div>
 
 <!--<script src="javascript/vue.min.js"></script>-->
@@ -137,88 +146,19 @@ home page has site map
 <script src="javascript/axios.min.js"></script>
 <!--<script src="https://unpkg.com/axios/dist/axios.min.js"></script>-->
 
-
-<script>
-
-    var app = new Vue({
-        delimiters: ['[[', ']]'],
-        el: '#app',
-        data: {
-            message: 'hello vue',
-            products: [1, 2, 3, 4]
-        },
-        created() {
-            axios.post('/cname', {
-                firstName: 'Fred',
-                lastName: 'Flintstone'
-            })
-                .then(function (response) {
-                    console.log(response);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
-        }
-    });
-</script>
+<script src="javascript/index.js"></script>
 
 
 <script>
+    document.getElementById("text1").value = "Johnny Bravo";
 
-    var app = new Vue({
-        delimiters: ['[[', ']]'],
-        el: '#app',
-        data: {
-            message: 'Hello Vue!'
-        }
-    });
+    function f1() {
 
-    /*
-    https://github.com/axios/axios
-
-        axios.post('/user', {
-        firstName: 'Fred',
-        lastName: 'Flintstone'
-    })
-        .then(function (response) {
-            console.log(response);
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-
-     */
-    // http://127.0.0.1:5000/1
-    function f5() {
-        jsobject1 = {
-            firstName: 'Fred',
-            lastName: 'Flintstone'
-        };
-        // send jsobject without JSON.stringify()
-        axios.post('/5', jsobject1)
-            .then(function (response) {
-                object1 = response.data; // is object, not string
-                document.getElementById("id5").innerHTML = JSON.stringify(response.data);
-                document.getElementById("id6").innerHTML = response.data.lastName;
-                x = response; // type x.data in console
-                console.log("x.data = " + x.data);
-                console.log("response.data = " + response.data);
-                console.log("response.data.firstName = " + response.data.firstName);
-                console.log("response.data.lastName = " + response.data.lastName);
-                console.log(response);
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        alert(document.getElementById("text1").value)
 
     }
-
-    function f6() {
-        document.getElementById("id6").innerHTML = "message text";
-
-    }
-
 
 </script>
+
 </body>
 </html>
