@@ -1,7 +1,7 @@
 ""r"""
 
 """
-from flask import Flask, request, render_template, json, jsonify
+from flask import Flask, request, render_template, json, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
 import logging
@@ -165,6 +165,12 @@ db.engine.table_names()
 
 
 """
+
+
+@app.route('/')
+def index():
+    # return render_template('index.html')  # Not using template engine
+    return redirect("/static/index.html")
 
 
 # add component
@@ -341,7 +347,6 @@ def cname():
         "component_names": str(cname_list),
     }
 
-
     return json.dumps(cname_dict)
 
 
@@ -369,14 +374,17 @@ def cversion():
     return 'cversion is POST. request body example: {"name": "component_name"}'
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 
 @app.route('/1')
 def f1():
-    return render_template('page1.html')
+    return render_template('static/html/page1.html')
+
+
+@app.route('/2')
+def f2():
+
+    return url_for('static', filename='style.css')
+
 
 
 @app.route('/5', methods=['POST', 'GET'])
@@ -388,12 +396,6 @@ def f5():
         return request.data
     return "f5"
 
-
-
-@app.route('/dbca')
-def dbca():
-    db.create_all()
-    return 'db.create_all()'
 
 
 if __name__ == '__main__':
