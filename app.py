@@ -1,10 +1,12 @@
 ""r"""
 
-using print() to debug because logging makes too many TypeError: not all arguments converted during string formatting
-
 """
-from flask import Flask, request, render_template, json
+from flask import Flask, request, render_template, json, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
 
 app = Flask(__name__)
 
@@ -18,17 +20,18 @@ db.drop_all()
 
 class Product(db.Model):
     name = db.Column(db.String(255), primary_key=True)
-    software_releases = db.relationship("SoftwareRelease", back_populates="product")
+    software_releases = db.relationship("SoftwareRelease", back_populates="product",
+                                        cascade="all, delete, delete-orphan")
 
 
 class SoftwareRelease(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(255), db.ForeignKey('product.name'))
     version_number = db.Column(db.String(255))
-    status = db.Column(db.String(255))
+    status = db.Column(db.String(255), default='In Development')
     __table_args__ = (db.UniqueConstraint('product_name', 'version_number'),)
     product = db.relationship("Product", back_populates="software_releases")
-    components = db.relationship("Association", back_populates="software_release")
+    components = db.relationship("Association", back_populates="software_release", cascade="all, delete, delete-orphan")
 
 
 class Component(db.Model):
@@ -36,14 +39,16 @@ class Component(db.Model):
     name = db.Column(db.String(255))
     version = db.Column(db.String(255))
     __table_args__ = (db.UniqueConstraint('name', 'version'),)
-    software_releases = db.relationship("Association", back_populates="component")
+    software_releases = db.relationship("Association", back_populates="component", cascade="all, delete, delete-orphan")
 
 
 # Association object for SoftwareRelease and Component. Includes extra column: Destination path
 class Association(db.Model):
-    software_release_id = db.Column(db.Integer, db.ForeignKey('software_release.id'), primary_key=True)
-    component_id = db.Column(db.Integer, db.ForeignKey('component.id'), primary_key=True)
-    destination = db.Column(db.String(65535))
+    id = db.Column(db.Integer, primary_key=True)
+    software_release_id = db.Column(db.Integer, db.ForeignKey('software_release.id'))
+    component_id = db.Column(db.Integer, db.ForeignKey('component.id'))
+    destination = db.Column(db.String(65535), default='.', nullable=False)  # if nullable, bypasses unique constraint
+    __table_args__ = (db.UniqueConstraint('software_release_id', 'component_id', 'destination'),)
     component = db.relationship("Component", back_populates="software_releases")
     software_release = db.relationship("SoftwareRelease", back_populates="components")
 
@@ -53,53 +58,64 @@ db.create_all()
 r"""
 from app import db, Product, SoftwareRelease,Component, Association
 
-p = Product.query.all()
-s = SoftwareRelease.query.all()
-c = Component.query.all()
-a = Association.query.all()
-
-
 Product.query.all()
 SoftwareRelease.query.all()
 Component.query.all()
 Association.query.all()
+
+
+for x in Component.query.all():
+    print(x.name, x.version)
+
 
 p1 = Product(name="p1")
 db.session.add(p1)
 p2 = Product(name="p2")
 db.session.add(p2)
 
-
 s1 = SoftwareRelease(product_name="p1", version_number="1")
 db.session.add(s1)
-
 s2 = SoftwareRelease(product_name="p2", version_number="1")
 db.session.add(s2)
 
-c1 = Component(name="p1", version="1")
+c1 = Component(name="c1", version="1")
 db.session.add(c1)
-c2 = Component(name="p2", version="1")
+c2 = Component(name="c2", version="1")
 db.session.add(c2)
 
 db.session.commit()
 
 
 
+a1 = Association.query.filter_by(id=1).first()
+a2 = Association.query.filter_by(id=2).first()
+a3 = Association.query.filter_by(id=3).first()
+a4 = Association.query.filter_by(id=4).first()
+a12 = Association.query.filter_by(id=12).first()
 
 
-# create association (1,2)
 
 a1 = Association()
 a1.component = c1
 s1.components.append(a1)
-db.session.commit()
-
 
 a2 = Association()
 a2.component = c2
 s2.components.append(a2)
+
+a3 = Association()
+a3.component = c1
+s2.components.append(a3)
+
 db.session.commit()
 
+
+a12 = Association(id=12, component=c1)
+s1.components.append(a12)
+
+
+a2.component = c2
+s2.components.append(a4)
 
 
 a2 = Association.query.filter_by(software_release_id=2, component_id=2).first()
@@ -151,16 +167,62 @@ db.engine.table_names()
 """
 
 
+@app.route('/')
+def index():
+    # return render_template('index.html')  # Not using template engine
+    return redirect("/static/index.html")
+
+
 # add component
-# http://127.0.0.1:5000/a
-@app.route('/a', methods=['POST', 'GET'])
+# http://127.0.0.1:5000/add
+@app.route('/add', methods=['POST', 'GET'])
 def add():
     if request.method == 'POST':
-        component = json.loads(request.data)  # {'name': name, 'version': version} # <class 'dict'>
+        # component = json.loads(request.data)  # {'name': name, 'version': version} # <class 'dict'>
 
-        return request.data
+        component = request.get_json()  # <class 'dict'>
+        name = component['name']
+        version = component['version']
+        logging.debug("name = " + str(name))
+        logging.debug("version = " + str(version))
 
-    return '/a page text message'
+        # test with POSTMAN {"name": "c1", "version": "1"}
+        # query component
+        query_component = db.session.query(Component).filter_by(name=name, version=version).first()
+
+        # check if exist
+        if query_component is not None:
+            return "409 Conflict. Component already exists"
+
+        # add component
+        component_new = Component(name=name, version=version)
+        db.session.add(component_new)
+        db.session.commit()
+
+        # j1 = jsonify(username="user1", email="email2")
+        # logging.debug("j1 = " + str(j1))
+        # logging.debug("type(j1) = " + str(type(j1)))  # <class 'flask.wrappers.Response'>
+
+        return "201 Created. Component is added"
+
+    return '/add page text message'
+
+
+# check component's existence
+# http://127.0.0.1:5000/check
+@app.route('/check', methods=['POST', 'GET'])
+def check():
+    component = request.get_json()  # <class 'dict'>
+    name = component['name']
+    version = component['version']
+
+    query_component = db.session.query(Component).filter_by(name=name, version=version).first()
+
+    # check if exist
+    if query_component is not None:
+        return "409 Conflict. Component already exists"
+
+    return "404 Not Found. Component does not exist"
 
 
 # bring recipe
@@ -183,6 +245,9 @@ def bring():
             c3
         ]
     }
+
+    if request.method == 'POST':
+        return json.dumps(r1)
 
     return json.dumps(r1)
 
@@ -228,63 +293,109 @@ def view():
 
     slist = []
     for s in squery:
-        slist.append(s.product_name + s.version_number)
+        slist.append(s.product_name + "--v" + s.version_number)
 
     clist = []
     for c in cquery:
-        clist.append(c.name)
+        clist.append(c.name + "--v" + c.version)
+
+    # Component Names
+    cset = set()
+    for c in cquery:
+        cset.add(c.name)
+    cname = sorted(list(cset))
+
+    # also make components list with highest version number
 
     alist = []
     for a in aquery:
-        alist.append(a.software_release_id + a.component_id)
+        alist.append(a.software_release.product_name + "_" + a.component.name)
 
     viewall = {
         "Product": str(plist),
         "SoftwareRelease": str(slist),
         "Component": str(clist),
+        "Component_Names": str(cname),
         "Association": str(alist)
     }
 
-    viewall_json = json.dumps(viewall)
-
-    return viewall_json
+    return json.dumps(viewall)
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# Get a list of all component names
+# http://127.0.0.1:5000/cname
+@app.route('/cname', methods=['POST', 'GET'])
+def cname():
+    if request.method == 'POST':
+        return request.data
+
+    cquery = Component.query.all()
+
+    clist = []
+    for c in cquery:
+        clist.append(c.name + "--v" + c.version)
+
+    # Component Names
+    cset = set()
+    for c in cquery:
+        cset.add(c.name)
+    cname_list = sorted(list(cset))
+
+    # also make components list with highest version number
+
+    cname_dict = {
+        "component_names": str(cname_list),
+    }
+
+    return json.dumps(cname_dict)
+
+
+# Get a list of versions for a specific component
+# http://127.0.0.1:5000/cversion
+@app.route('/cversion', methods=['POST', 'GET'])
+def cversion():
+    if request.method == 'POST':
+
+        component = request.get_json()  # <class 'dict'>
+        name = component['name']
+
+        cquery = Component.query.filter_by(name=name).all()
+
+        clist = []
+        for c in cquery:
+            clist.append(c.version)
+
+        cversion_sorted = sorted(clist)
+
+        cversion_dict = {"component_versions": str(cversion_sorted)}
+
+        return json.dumps(cversion_dict)
+
+    return 'cversion is POST. request body example: {"name": "component_name"}'
+
 
 
 @app.route('/1')
 def f1():
-    return render_template('page1.html')
+    return render_template('static/html/page1.html')
 
 
 @app.route('/2')
 def f2():
-    return render_template('page2.html')
+
+    return url_for('static', filename='style.css')
 
 
-@app.route('/3')
-def f3():
-    return render_template('page3.html')
 
-
-@app.route('/4')
-def f4():
-    return render_template('page4.html')
-
-
-@app.route('/5')
+@app.route('/5', methods=['POST', 'GET'])
 def f5():
-    pass
-    # return alchemy.f1()
+    if request.method == 'POST':
+        logging.info(request.data)
+        logging.debug("type(request.data) = " + str(type(request.data)))
+        logging.debug("request.data = " + str(request.data))
+        return request.data
+    return "f5"
 
-
-@app.route('/dbca')
-def dbca():
-    db.create_all()
-    return 'db.create_all()'
 
 
 if __name__ == '__main__':

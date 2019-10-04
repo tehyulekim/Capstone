@@ -16,7 +16,7 @@ from botocore.exceptions import ClientError
 from zipfile import ZipFile
 from pathlib import Path
 
-logging.basicConfig(level=logging.INFO)  # comment out to turn off info messages
+logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
 
 # BUCKET = 'capstones3bucket'
 BUCKET = 'capstones3bucket'
@@ -33,7 +33,7 @@ def cu(name, version, *files):
     """
     $ python cli.py cu <name> <version> <*files>
 
-    Example: will create z__v1.zip containing folder1 and README.md
+    Example: will create z--v1.zip containing folder1 and README.md
     $ python cli.py cu z 1 folder1 README.md
 
 
@@ -42,10 +42,13 @@ def cu(name, version, *files):
     :param files:
     :return: True when success, False when failure
     """
-    logging.info("function cu()")
+    name_zip = name + "--v" + str(version) + ".zip"
+    logging.debug("name_zip = " + str(name_zip))  # name--v1.zip
 
-    name_zip = name + "__v" + str(version) + ".zip"
-    logging.debug("name_zip = " + str(name_zip))
+    # check component's existence in database
+    if component_exist(name, version):
+        print("409 Component already exists")
+        return False
 
     try:
         # Compress
@@ -54,10 +57,10 @@ def cu(name, version, *files):
 
         # Upload
         upload(name_zip, BUCKET, name_zip)
-        logging.info(str(name_zip) + "is compressed and uploaded to:" + BUCKET)
+        logging.info(str(name_zip) + " is compressed and uploaded to: " + BUCKET)
 
         # post metadata
-        post_component(name, version)
+        add_component(name, version)
 
     except Exception as e:
         logging.error(e)
@@ -110,7 +113,7 @@ def de(name, version, target_dir=DOWNLOAD_PATH):
     """
     logging.info("function de()")
 
-    name_zip = name + "__v" + str(version) + ".zip"
+    name_zip = name + "--v" + str(version) + ".zip"
 
     file_name = Path(target_dir).joinpath(name_zip).as_posix()
 
@@ -248,12 +251,46 @@ def f1():
     return 1
 
 
-def post_component(name, version):
-    component = {'name': name, 'version': version}
+# Get a list of versions for a specific component
+def component_version(name):
+    component = {'name': str(name)}
 
-    url = SERVER_URL + '/a'
-    r = requests.post(url, json=component)
-    print("r.text = ", r.text)
+    url = SERVER_URL + '/cversion'
+    response = requests.post(url, json=component)
+    logging.debug("response.text = " + str(response.text))
+
+    return response.text
+
+
+# check if component exist
+def component_exist(name, version):
+    component = {'name': str(name),
+                 'version': str(version)}
+
+    url = SERVER_URL + '/check'
+    response = requests.post(url, json=component)
+    logging.debug("response.text = " + str(response.text))
+
+    if "404" in response.text:
+        return False
+    elif "409" in response.text:
+        return True
+
+
+# post component metadata
+def add_component(name, version: str):
+    component = {'name': str(name),
+                 'version': str(version)}
+
+    url = SERVER_URL + '/add'
+    response = requests.post(url, json=component)
+
+    if "409" in response.text:
+        logging.error(response.text)
+        return False
+    elif "201" in response.text:
+        logging.debug("response.text = " + str(response.text))
+        return True
 
 
 def get_recipe(product_name=None, version_number=None):
