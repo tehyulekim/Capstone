@@ -1,23 +1,23 @@
 body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    font: 16px "Lucida Grande", Helvetica, Arial, sans-serif;
 
-  margin: 0 !important;
-  padding: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 
-  background-color: black;
-  color: lightgray;
+    background-color: black;
+    color: lightgray;
 }
 
 a {
-  color: #00B7FF;
+    color: #00B7FF;
 }
 
 
 main {
-  min-height: calc(100vh - 50px);
-  padding: 24px;
+    min-height: calc(100vh - 50px);
+    padding: 24px;
 
-  border: thin solid
+    border: thin solid
 }
 
 table {
@@ -29,14 +29,10 @@ table {
 th, td {
     border: 1px solid gray;
     text-align: center;
-    width:60px;
-    height:60px;
+    width: 60px;
+    height: 60px;
     overflow: hidden;
 }
-
-
-
-
 
 
 /*
@@ -104,7 +100,7 @@ header input[type=text] {
 }
 
 #navigation {
-    height: calc(100% - 330px);
+    height: calc(100% - 234px);
 }
 
 #addressbar {
@@ -163,7 +159,7 @@ nav a {
 }
 
 nav a:hover {
-    background-color: darkblue;
+    background-color: blue;
 }
 
 .active {
@@ -214,7 +210,8 @@ aside {
 
 }
 
-@media screen and (max-width: 640px) {
+/* max-width for mobile mode */
+@media screen and (max-width: 960px) {
     #sidebar {
         position: relative;
         width: 100%;
@@ -234,8 +231,6 @@ aside {
 }
 
 
-
-
 table, th, td {
     border: 1px solid gray;
     border-collapse: collapse;
@@ -243,7 +238,7 @@ table, th, td {
 
 th, td {
     text-align: center;
-    width:5.26%;
+    width: 5.26%;
 }
 
 th {
@@ -257,3 +252,6 @@ tr, .no_border {
 }
 
 
+.router-link-active {
+    background-color: darkblue;
+}

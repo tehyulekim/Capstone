@@ -8,155 +8,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="stylesheet/style.css"/>
 </head>
-<body>
-<div id="sidebar" class="sidebar">
-  <header>
-    <a id="homelogo" href="index.html">
-      Home Logo
-    </a>
-    <label>
-      <!--      <input type="text" placeholder="Search bar">-->
-    </label>
-  </header>
 
-  <div id="navigation">
-    <div id="addressbar">
-      <ul class="breadcrumb">
-        <li><a href="index.html">Home</a></li>
-        <!--<li><a href="#">Link-1</a></li>-->
-      </ul>
+<body>
+<div id="app">
+  <div id="sidebar" class="sidebar">
+    <header>
+      <router-link id="homelogo" to="/">
+        <img src="image/logo.png" alt="Home Logo">
+      </router-link>
+      <!--      <a id="homelogo" href="index.html">-->
+      <!--        <img src="image/logo.png" alt="Home Logo">-->
+      <!--      </a>-->
+
+      <!--      <label>-->
+      <!--         <input type="text" placeholder="Search bar">-->
+      <!--      </label>-->
+    </header>
+
+    <div id="navigation">
+      <!--      <div id="addressbar">-->
+      <!--        <ul class="breadcrumb">-->
+      <!--          <li><a href="index.html">Home</a></li>-->
+      <!--          <li><a href="#">Link-1</a></li>-->
+      <!--        </ul>-->
+      <!--      </div>-->
+
+      <nav id="nav1">
+        <!--      <a href="index.html" class="active">Home</a>-->
+
+        <!-- `<router-link>` will be rendered as an `<a>` tag by default -->
+        <!--      include list and search -->
+        <router-link to="/p">Products</router-link>
+        <router-link to="/pnew">New</router-link>
+        <router-link to="/pedit">Edit</router-link>
+        <router-link to="/pdelete">Delete</router-link>
+        <router-link to="/foo">Go to Foo</router-link>
+        <router-link to="/bar">Go to Bar</router-link>
+        <router-link to="/page1">Go to Page1</router-link>
+      </nav>
+
+      <nav id="nav2">
+        <router-link to="/c">Components</router-link>
+        <router-link to="/cnew">New</router-link>
+        <router-link to="/cedit">Edit</router-link>
+        <router-link to="/cdelete">Delete</router-link>
+        <router-link to="/csearchsr">Search by Software Release</router-link>
+      </nav>
+
+      <nav id="nav3">
+        <router-link to="/sr">Software Releases</router-link>
+        <router-link to="/srnew">New</router-link>
+        <router-link to="/sredit">Edit</router-link>
+        <router-link to="/srdelete">Delete</router-link>
+        <router-link to="/srsearchc">Search by Component</router-link>
+      </nav>
     </div>
 
-    <nav id="nav1">
-      <!--      <a href="index.html" class="active">Home</a>-->
-      <!--      include list and search -->
-      <a onclick="">Products</a>
-      <a onclick="">New</a>
-      <a onclick="">Edit</a>
-      <a onclick="">Delete</a>
-    </nav>
-
-    <nav id="nav2">
-      <a onclick="">Components</a>
-      <a onclick="">New</a>
-      <a onclick="">Edit</a>
-      <a onclick="">Delete</a>
-      <a onclick="">Search by Software Release</a>
-    </nav>
-
-    <nav id="nav3">
-      <a onclick="">Software Releases</a>
-      <a onclick="">New</a>
-      <a onclick="">Edit</a>
-      <a onclick="">Delete</a>
-      <a onclick="">Search by Component</a>
-    </nav>
+    <!--    <footer></footer>-->
   </div>
 
-  <footer></footer>
+
+  <div id="content" class="content">
+    <main id="main">
+
+      <!-- route outlet -->
+      <!-- component matched by the route will render here -->
+      <router-view :key="$route.fullPath"></router-view>
+
+
+
+
+    </main>
+    <aside class="aside"></aside>
+  </div>
 </div>
 
-
-<div id="content" class="content">
-  <main id="main">
-    <section>
-      <h1>Section heading</h1>
-      <br/>
-      <button type="button" onclick="">Test Button 1</button>
-      <button type="button" onclick="">Test Button 2</button>
-      <button type="button" onclick="">Test Button 3</button>
-      <button type="button" onclick="">Test Button 4</button>
-      <button type="button" onclick=f5()>Test Button 5</button>
-      <button type="button" onclick="">Test Button 6</button>
-
-      <div id="id1">1</div>
-      <div id="id2">2</div>
-      <div id="id3">3</div>
-      <div id="id4">4</div>
-      <div id="id5">5</div>
-      <div id="id6">6</div>
-
-      <br/>
-
-    </section>
-
-    <section>
-      <h1>Vue App</h1>
-
-
-      <div id="app">
-        <ul>
-          <li v-for="product in products">
-            [[ product ]]
-            [[ product.name ]]
-            [[ product.property]]
-            [[ message ]]
-          </li>
-        </ul>
-
-
-        <label>
-          <input type="text" v-model="message">
-          [[ message ]]
-          {{ message }}
-
-        </label>
-
-
-        Component changes
-        <ul>
-          <li v-for="component_name in component_names">
-            [[ component_name ]]
-          </li>
-        </ul>
-        [[ component_names ]]
-
-        force reload force hard reload EDIT1 EDIT2 EDIT3 Edit4 When in debug mode, no need to hard reload. or is it
-
-
-      </div>
-
-    </section>
-
-    <section>
-      <h1>HTML form input</h1>
-      <form action="http://127.0.0.1:5000/6" method="post">
-        <label>
-          <input type="text" name="name1" value="v1">
-          <input type="text" name="name2" value="v2">
-          <input type="text" name="name3" value="v3">
-          <input type="submit" value="Submit">
-        </label>
-      </form>
-
-      <form onsubmit="f1()">
-        <label for="text1">text1 label</label>
-        <input type="text" id="text1">
-      </form>
-
-
-    </section>
-  </main>
-  <aside class="aside"></aside>
-</div>
-
-<!--<script src="javascript/vue.min.js"></script>-->
+<!-- development -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
-<script src="javascript/axios.min.js"></script>
-<!--<script src="https://unpkg.com/axios/dist/axios.min.js"></script>-->
+<!-- production -->
+<!--<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10"></script>-->
+
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 <script src="javascript/index.js"></script>
+<script src="javascript/experiment.js"></script>
 
 
 <script>
+
+
     document.getElementById("text1").value = "Johnny Bravo";
 
     function f1() {
-
         alert(document.getElementById("text1").value)
-
     }
+
 
 </script>
 

@@ -86,7 +86,6 @@ db.session.add(c2)
 db.session.commit()
 
 
-
 a1 = Association.query.filter_by(id=1).first()
 a2 = Association.query.filter_by(id=2).first()
 a3 = Association.query.filter_by(id=3).first()
@@ -124,8 +123,6 @@ db.session.commit()
 
 
 
-
-
 https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html
 
 # create parent, append a child via association
@@ -139,9 +136,6 @@ p.children.append(a)
 for assoc in p.children:
     print(assoc.extra_data)
     print(assoc.child)
-
-
-
 
 
 

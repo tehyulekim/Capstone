@@ -1,15 +1,4 @@
 """"""r"""
-
-
-remove jinja2 template comment 
-settings > language & frameworks > python template languages > html > None
-
-
-
-
-
-
-
 import sys
 
 print("sys.argv = ", sys.argv)
