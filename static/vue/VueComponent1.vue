@@ -1,10 +1,12 @@
 <template>
-  
+
+
+
 </template>
 
 <script>
     export default {
-        name: "2"
+        name: "VueComponent1"
     }
 </script>
 

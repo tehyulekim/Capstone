@@ -1,224 +1,113 @@
 <!DOCTYPE html>
 <!--
-home page has site map
-
-
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Index Page</title>
+  <title>Component Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link rel="stylesheet" href="stylesheet/style.css"/>
-  <style></style>
 </head>
+
 <body>
-<div id="sidebar" class="sidebar">
-  <header>
-    <a id="homelogo" href="index.html">
-      Home page Logo
-    </a>
-    <label>
-      <!--      <input type="text" placeholder="Search bar">-->
-    </label>
-  </header>
+<div id="app">
+  <div id="sidebar" class="sidebar">
+    <header>
+      <router-link id="homelogo" to="/">
+        <img src="image/logo.png" alt="Home Logo">
+      </router-link>
+      <!--      <a id="homelogo" href="index.html">-->
+      <!--        <img src="image/logo.png" alt="Home Logo">-->
+      <!--      </a>-->
 
+      <!--      <label>-->
+      <!--         <input type="text" placeholder="Search bar">-->
+      <!--      </label>-->
+    </header>
 
-  <div id="navigation">
-    <div id="addressbar">
-      <ul class="breadcrumb">
-        <li><a href="index.html">Home</a></li>
-        <!--<li><a href="#">Link-1</a></li>-->
-      </ul>
+    <div id="navigation">
+      <!--      <div id="addressbar">-->
+      <!--        <ul class="breadcrumb">-->
+      <!--          <li><a href="index.html">Home</a></li>-->
+      <!--          <li><a href="#">Link-1</a></li>-->
+      <!--        </ul>-->
+      <!--      </div>-->
+
+      <nav id="nav1">
+        <!--      <a href="index.html" class="active">Home</a>-->
+
+        <!-- `<router-link>` will be rendered as an `<a>` tag by default -->
+        <!--      include list and search -->
+        <router-link to="/p">Products</router-link>
+        <router-link to="/pnew">New</router-link>
+        <router-link to="/pedit">Edit</router-link>
+        <router-link to="/pdelete">Delete</router-link>
+        <router-link to="/foo">Go to Foo</router-link>
+        <router-link to="/bar">Go to Bar</router-link>
+        <router-link to="/page1">Go to Page1</router-link>
+      </nav>
+
+      <nav id="nav2">
+        <router-link to="/c">Components</router-link>
+        <router-link to="/cnew">New</router-link>
+        <router-link to="/cedit">Edit</router-link>
+        <router-link to="/cdelete">Delete</router-link>
+        <router-link to="/csearchsr">Search by Software Release</router-link>
+      </nav>
+
+      <nav id="nav3">
+        <router-link to="/sr">Software Releases</router-link>
+        <router-link to="/srnew">New</router-link>
+        <router-link to="/sredit">Edit</router-link>
+        <router-link to="/srdelete">Delete</router-link>
+        <router-link to="/srsearchc">Search by Component</router-link>
+      </nav>
     </div>
 
-    <nav id="nav1">
-      <a href="index.html" class="active">Home</a>
-
-    </nav>
-
-
-    <nav id="nav2">
-
-      <a href="">Components</a>
-      <a href="">Products</a>
-      <a href="">Software Releases</a>
-      <a href=""></a>
-
-    </nav>
-
-    <nav id="nav3">
-      <a onclick="f6()">Component Search</a>
-      <a onclick="">Component Search by Software Release</a>
-      <a onclick="">New Component</a>
-      <a onclick="">Edit Component</a>
-      <a onclick="">Delete Component</a>
-
-
-      <a onclick="">Products Search</a>
-      <a onclick="">New Product</a>
-      <a onclick="">Edit Product</a>
-
-      <a onclick="">Software Release Search</a>
-      <a onclick="">Software Release Search by Component</a>
-      <a onclick="">New</a>
-      <a onclick="">Edit</a>
-      <a onclick="">Delete</a>
-
-      <a onclick=""></a>
-
-    </nav>
+    <!--    <footer></footer>-->
   </div>
 
-  <footer>
-  </footer>
+
+  <div id="content" class="content">
+    <main id="main">
+
+      <!-- route outlet -->
+      <!-- component matched by the route will render here -->
+      <router-view :key="$route.fullPath"></router-view>
+
+
+
+
+    </main>
+    <aside class="aside"></aside>
+  </div>
 </div>
 
-
-<div id="content" class="content">
-  <main id="main">
-    <article>
-      <h1>Article Heading</h1>
-
-    </article>
-    <section>
-      <h1>Section heading</h1>
-
-      <br/>
-      <button type="button" onclick="">Test Button 3</button>
-      <button type="button" onclick="">Test Button 4</button>
-      <button type="button" onclick="">Test Button 5</button>
-      <button type="button" onclick="">Test Button 6</button>
-
-
-      <div id="id"></div>
-      <div id="id1"></div>
-      <div id="id2"></div>
-      <div id="id3"></div>
-
-      <br/>
-
-      <div id="app">
-        <ul>
-          <li v-for="product in products">
-            [[ message ]]
-            [[product ]]
-            [[ product.name ]]
-          </li>
-        </ul>
-      </div>
-
-    </section>
-
-    <section>
-      <h1>Section heading</h1>
-
-
-      <br/>
-      <button type="button" onclick=f5()>Test Button 5</button>
-      <br/>
-      <div id="id5"></div>
-      <div id="id6">element id6</div>
-
-      <br/>
-
-    </section>
-  </main>
-
-
-  <aside class="aside">
-  </aside>
-</div>
-
-<!--<script src="javascript/vue.min.js"></script>-->
+<!-- development -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
-<script src="javascript/axios.min.js"></script>
-<!--<script src="https://unpkg.com/axios/dist/axios.min.js"></script>-->
+<!-- production -->
+<!--<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10"></script>-->
+
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<script src="javascript/index.js"></script>
+<script src="javascript/experiment.js"></script>
 
 
 <script>
 
-    var app = new Vue({
-        delimiters: ['[[', ']]'],
-        el: '#app',
-        data: {
-            message: 'hello vue',
-            products: [1, 2, 3, 4]
-        },
-        created() {
-            axios.post('/cname', {
-                firstName: 'Fred',
-                lastName: 'Flintstone'
-            })
-                .then(function (response) {
-                    console.log(response);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
-        }
-    });
-</script>
 
+    document.getElementById("text1").value = "Johnny Bravo";
 
-<script>
-
-    var app = new Vue({
-        delimiters: ['[[', ']]'],
-        el: '#app',
-        data: {
-            message: 'Hello Vue!'
-        }
-    });
-
-    /*
-    https://github.com/axios/axios
-
-        axios.post('/user', {
-        firstName: 'Fred',
-        lastName: 'Flintstone'
-    })
-        .then(function (response) {
-            console.log(response);
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-
-     */
-    // http://127.0.0.1:5000/1
-    function f5() {
-        jsobject1 = {
-            firstName: 'Fred',
-            lastName: 'Flintstone'
-        };
-        // send jsobject without JSON.stringify()
-        axios.post('/5', jsobject1)
-            .then(function (response) {
-                object1 = response.data; // is object, not string
-                document.getElementById("id5").innerHTML = JSON.stringify(response.data);
-                document.getElementById("id6").innerHTML = response.data.lastName;
-                x = response; // type x.data in console
-                console.log("x.data = " + x.data);
-                console.log("response.data = " + response.data);
-                console.log("response.data.firstName = " + response.data.firstName);
-                console.log("response.data.lastName = " + response.data.lastName);
-                console.log(response);
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
-
-    }
-
-    function f6() {
-        document.getElementById("id6").innerHTML = "message text";
-
+    function f1() {
+        alert(document.getElementById("text1").value)
     }
 
 
 </script>
+
 </body>
 </html>
