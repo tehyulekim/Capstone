@@ -1,10 +1,17 @@
+/*
+use selected for picking product. Dynamic options
+https://vuejs.org/v2/guide/forms.html
+
+
+*/
+
 Vue.component('blog-post', {
     props: ['title'],
     template: '<h4>{{ title }}</h4>'
-})
+});
 
 
-ProductsList = Vue.component('products-list', {
+Vue.component('products-list', {
     props: ['data2'],
     template: `
 <div>
@@ -21,35 +28,114 @@ Vue.component('button-counter', {
     },
     template: `
 <button v-on:click="count++">You clicked me {{ count }} times.</button>
-`,
+`
 });
 
 // 1. Define route components. These can be imported from other files
-
 const Home = {template: `<div><h1>Software Component Store and Release Assembly Tools</h1></div>`};
 
 const Products = {
-
     data() {
         return {
-            posts: [],
-            message1: null,
-            message2: null,
-            info: null,
             product_names: [],
+            product_new: null,
+            product_new_response: null,
+
+            product_selected: null,
+            product_edit: null,
+            product_delete: null,
+
+            picked: null,
+            selected: null,
+
+            data1: "data1old",
+
         }
     },
+    methods: {
+        newProduct: function () {
+            axios.post('/pnew',
+                {
+                    product_name: this.product_new,
+                })
+                .then(response => (this.product_new_response = response.data))
+                .catch(error => console.log(error));
+        },
 
-    mounted() {
+        func1: function () {
+
+            axios.post('/5', {
+                firstName: 'fp1firstname',
+                lastName: 'fp1lastname'
+            })
+                .then(response => (this.data1 = response.data))
+                .catch(error => console.log(error));
+            // this.data1 = "data1new"
+        }
+
+
+    },
+
+
+    mounted: function () {
+        axios.get('/pname')
+            .then(response => (this.product_names = response.data))
+            .catch(error => console.log(error));
+    },
+
+    template: `
+<div>
+<h1>Products Page</h1>
+<hr/>
+<h1> {{ product_names }} </h1>
+<hr/>
+<input v-model="product_new" placeholder="New Product">
+<span>Message is: </span>
+<p>{{ product_new }}</p>
+<hr/>
+
+<input type="radio" id="one" value="One" v-model="picked">
+<label for="one">One</label>
+<br>
+<input type="radio" id="two" value="Two" v-model="picked">
+<label for="two">Two</label>
+<br>
+<span>Picked: {{ picked }}</span>
+
+<hr/>
+<button v-on:click="func1">Func1 Button</button>
+<span>data1 is : {{data1}}</span>
+
+
+    
+    
+</div>`
+};
+
+const Foo = {
+    data: function () {
+        return {
+            message1: null,
+            message2: null,
+            posts: []
+        };
+    },
+
+    methods: {
+        say: function () {
+            axios.get('https://jsonplaceholder.typicode.com/posts')
+                .then((response) => {
+                    this.posts = response.data
+                });
+        },
+    },
+
+    mounted: function () {
+
         // http://127.0.0.1:5000/b, fixes origin policy
         axios.get('/b')
             .then(response => (this.message1 = response.data))
             .catch(error => console.log(error));
-
-        axios.get('/pname')
-            .then(response => (this.product_names = response.data))
-            .catch(error => console.log(error));
-
 
         axios.post('/8', {
             firstName: 'fp1firstname',
@@ -58,118 +144,108 @@ const Products = {
             .then(response => (this.message2 = response.data))
             .catch(error => console.log(error));
 
-        axios.get('https://jsonplaceholder.typicode.com/posts')
-            .then((response) => {
-                // console.log(response.data, this)
-                this.posts = response.data
-                console.log("typeof response.data = " + typeof response.data);
-            });
-
-        axios.get('https://api.coindesk.com/v1/bpi/currentprice.json')
-            .then(response => (this.info = response))
-
+        this.say()
     },
 
-    template:
-        `
-<div>
-Products Page
-    <br/>
+    template: `<div>
     <span>message1: {{ message1 }}</span>
     <hr/>
     <span>message2: {{ message2 }}</span>
-    
-    
-    <h1> {{ product_names }} </h1>
-    
-    <h2> {{ info }} </h2>
-    
-
-    
+    <hr/>
     <blog-post
       v-for="post in posts"
       v-bind:key="post.id"
       v-bind:title="post.title"
     ></blog-post>
-    
-
 </div>`
 };
 
-const Foo = {
-    template: `<div>Foo page
-      <blog-post
-          v-for="post in posts"
-          v-bind:key="post.id"
-          v-bind:title="post.title"
-        ></blog-post>
-</div>`
-};
 
 const Bar = {
-    template: `
-<div>
+    data: function () {
+        return {
+            data1: 1,
+            data2: 2
+        };
 
-bar
-<div id="id8">8</div>
-<button v-on:click="myFunctionOnLoad()">Greet</button>
+    },
+
+    methods: {
+        say: function (message) {
+            alert(message)
+        },
+
+    },
 
 
+    mounted: function () {
+
+        axios.get('/b')
+            .then(response => (this.data1 = response.data))
+            .catch(error => console.log(error));
+
+        axios.post('/5',
+            {
+                x: '1',
+                y: '2'
+            })
+            .then(response => (this.data2 = response.data))
+            .catch(error => console.log(error));
+
+    },
+
+    template: `<div>
+  <button v-on:click="say('hi')">Say hi</button>
 </div>`
 };
 
 const Page1 = {
-    data: {
-        message: 'hello vue',
-        products: [
-            {name: "product1", property: "property1"},
-            {name: "product2", property: "property1"},
-            {name: "product3", property: "property1"},
-        ],
-        component_names: [],
-        name: "app1 name",
-
-        data1: "data1 text message data 1",
-
-        posts: []
-
-
+    data: function () {
+        return {
+            message: 'hello vue',
+            products: [
+                {name: "product1", property: "property1"},
+                {name: "product2", property: "property1"},
+                {name: "product3", property: "property1"},
+            ],
+            component_names: [],
+            name: "app1 name",
+            data1: "data1text",
+        }
     },
     methods: {
-        myFunctionOnLoad: function () {
-            document.getElementById("id8").innerHTML = "javascript message text element id 8";
+        post5: function () {
+            axios.post('/5',
+                {
+                    firstName: '123',
+                    lastName: '123213'
+                })
+                .then(response => this.data1 = response.data)
+
         },
 
-        post5: function () {
+        func1: function () {
             axios.post('/5', {
                 firstName: 'fp1firstname',
                 lastName: 'fp1lastname'
             })
-                .then(function (response) {
-                    object1 = response.data; // is object, not string
-                    x = response; // type x.data in console
-                    // document.getElementById("p1").innerHTML = response.data.lastName;
-                    // document.getElementById("p1").innerHTML = JSON.stringify(response.data);
-                    this.data1 = JSON.stringify(response.data);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+                .then(response => (this.data1 = response.data))
+                .catch(error => console.log(error));
+            // this.data1 = "data1new"
         }
     },
-    created: function () {
-        // Alias the component instance as `vm`, so that we
-        // can access it inside the promise function
-        var vm = this
-        // Fetch our array of posts from an API
-        fetch('https://jsonplaceholder.typicode.com/posts')
-            .then(function (response) {
-                return response.json()
-            })
-            .then(function (data) {
-                vm.posts = data
-            });
 
+    mounted: function () {
+        axios
+            .get('https://api.coindesk.com/v1/bpi/currentprice.json')
+            .then(response => {
+                this.info = response.data.bpi
+            })
+            .catch(error => {
+                console.log(error)
+                this.errored = true
+            })
+            .finally(() => this.loading = false)
 
         axios.get('/cname')
             .then(function (response) {
@@ -179,27 +255,24 @@ const Page1 = {
             .catch(function (error) {
                 console.log(error);
             });
+
+
     },
 
-    mounted:
-        function () {
-            axios
-                .get('https://api.coindesk.com/v1/bpi/currentprice.json')
-                .then(response => {
-                    this.info = response.data.bpi
-                })
-                .catch(error => {
-                    console.log(error)
-                    this.errored = true
-                })
-                .finally(() => this.loading = false)
-        },
 
     template: `
 <div>     
       <section>
         <h1>Section heading</h1>
-        <br/>
+        <hr/>
+        <button v-on:click="post5">Post5 Button</button>
+        <span>data1 is : {{data1}}</span>
+        
+        <button v-on:click="func1">Func1 Button</button>
+        <span>data1 is : {{data1}}</span>
+
+        <hr/>
+
         <button type="button" onclick="">Test Button 1</button>
         <button type="button" onclick="">Test Button 2</button>
         <button type="button" onclick="">Test Button 3</button>
@@ -246,8 +319,6 @@ const Page1 = {
         {{ component_names }}
 
         force reload CTRL click
-
-        <greeting></greeting>
 
         <h1 v-if="true">true</h1>
         <h1 v-else>false</h1>

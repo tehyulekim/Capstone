@@ -243,9 +243,9 @@ def bring():
     }
 
     if request.method == 'POST':
-        return json.dumps(r1)
+        return jsonify(r1)
 
-    return json.dumps(r1)
+    return jsonify(r1)
 
 
 # save component > SQL, and create new recipe
@@ -254,12 +254,7 @@ def bring():
 def create():
     d1 = {'11': 111, '22': 222}
 
-    j1 = json.dumps(d1)
-
-    if request.method == 'POST':
-        pass
-
-    return j1
+    return jsonify(d1)
 
 
 # http://127.0.0.1:5000/r
@@ -315,7 +310,7 @@ def view():
         "Association": str(alist)
     }
 
-    return json.dumps(viewall)
+    return jsonify(viewall)
 
 
 # Get a list of all component names
@@ -343,7 +338,7 @@ def cname():
         "component_names": str(cname_list),
     }
 
-    return json.dumps(cname_dict)
+    return jsonify(cname_dict)
 
 
 # Get a list of versions for a specific component
@@ -365,9 +360,10 @@ def cversion():
 
         cversion_dict = {"component_versions": str(cversion_sorted)}
 
-        return json.dumps(cversion_dict)
+        return jsonify(cversion_dict)
 
     return 'cversion is POST. request body example: {"name": "component_name"}'
+
 
 # http://127.0.0.1:5000/pname
 @app.route('/pname', methods=['POST', 'GET'])
@@ -380,36 +376,15 @@ def pname():
 
     return jsonify(plist)
 
+
 @app.route('/5', methods=['POST', 'GET'])
 def f5():
     if request.method == 'POST':
-        logging.info(request.data)
-        logging.debug("type(request.data) = " + str(type(request.data)))
         logging.debug("request.data = " + str(request.data))
-        logging.debug("request.form = " + str(request.form))
-
-        return request.data
+        logging.debug("request.get_json() = " + str(request.get_json()))
+        return jsonify(request.get_json())
     return "f5"
 
-
-@app.route('/6', methods=['POST', 'GET'])
-def f6():
-    if request.method == 'POST':
-        logging.info(request.data)
-        logging.debug("type(request.data) = " + str(type(request.data)))
-        logging.debug("request.data = " + str(request.data))
-        logging.debug("request.form = " + str(request.form))
-        logging.debug("type(request.form) = " + str(type(request.form)))
-
-        form1 = request.form.to_dict()
-
-        form1['name1']
-
-        logging.debug("type(form1) = " + str(type(form1)))
-        logging.debug("form1 = " + str(form1))
-
-        return str(form1)
-    return "f6"
 
 
 #  http://127.0.0.1:5000/7
@@ -419,8 +394,8 @@ def f7():
           'version': '1'}
     c2 = {'name': 'y', 'version': '2'}
 
+    return jsonify(c1, c2)
 
-    return jsonify(c1,c2)
 
 #  http://127.0.0.1:5000/8
 @app.route('/8', methods=['POST', 'GET'])
@@ -429,7 +404,7 @@ def f8():
           'version': '1'}
     c2 = {'name': 'y', 'version': '2'}
 
-    a1 = [c1,c2]
+    a1 = [c1, c2]
 
     return jsonify(a1)
 
