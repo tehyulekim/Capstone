@@ -369,6 +369,16 @@ def cversion():
 
     return 'cversion is POST. request body example: {"name": "component_name"}'
 
+# http://127.0.0.1:5000/pname
+@app.route('/pname', methods=['POST', 'GET'])
+def pname():
+    pquery = Product.query.all()
+
+    plist = []
+    for p in pquery:
+        plist.append(p.name)
+
+    return jsonify(plist)
 
 @app.route('/5', methods=['POST', 'GET'])
 def f5():
@@ -400,6 +410,28 @@ def f6():
 
         return str(form1)
     return "f6"
+
+
+#  http://127.0.0.1:5000/7
+@app.route('/7', methods=['POST', 'GET'])
+def f7():
+    c1 = {'name': 'x',
+          'version': '1'}
+    c2 = {'name': 'y', 'version': '2'}
+
+
+    return jsonify(c1,c2)
+
+#  http://127.0.0.1:5000/8
+@app.route('/8', methods=['POST', 'GET'])
+def f8():
+    c1 = {'name': 'x',
+          'version': '1'}
+    c2 = {'name': 'y', 'version': '2'}
+
+    a1 = [c1,c2]
+
+    return jsonify(a1)
 
 
 if __name__ == '__main__':

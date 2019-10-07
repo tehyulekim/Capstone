@@ -1,16 +1,8 @@
-let BlogPost = Vue.component('blog-post', {
+Vue.component('blog-post', {
     props: ['title'],
-    template: '<h3>{{ title }}</h3>'
+    template: '<h4>{{ title }}</h4>'
 })
 
-cgreeting = Vue.component('greeting', {
-    props: ['title'],
-    template: `
-<div>
-<p>hi, I am {{ title }} </p>
-<p>what is your name?</p>
-</div>`,
-});
 
 ProductsList = Vue.component('products-list', {
     props: ['data2'],
@@ -33,28 +25,76 @@ Vue.component('button-counter', {
 });
 
 // 1. Define route components. These can be imported from other files
+
+const Home = {template: `<div><h1>Software Component Store and Release Assembly Tools</h1></div>`};
+
 const Products = {
-    props: ['data3'],
-    template: `
+
+    data() {
+        return {
+            posts: [],
+            message1: null,
+            message2: null,
+            info: null,
+            product_names: [],
+        }
+    },
+
+    mounted() {
+        // http://127.0.0.1:5000/b, fixes origin policy
+        axios.get('/b')
+            .then(response => (this.message1 = response.data))
+            .catch(error => console.log(error));
+
+        axios.get('/pname')
+            .then(response => (this.product_names = response.data))
+            .catch(error => console.log(error));
+
+
+        axios.post('/8', {
+            firstName: 'fp1firstname',
+            lastName: 'fp1lastname'
+        })
+            .then(response => (this.message2 = response.data))
+            .catch(error => console.log(error));
+
+        axios.get('https://jsonplaceholder.typicode.com/posts')
+            .then((response) => {
+                // console.log(response.data, this)
+                this.posts = response.data
+                console.log("typeof response.data = " + typeof response.data);
+            });
+
+        axios.get('https://api.coindesk.com/v1/bpi/currentprice.json')
+            .then(response => (this.info = response))
+
+    },
+
+    template:
+        `
 <div>
 Products Page
-        <button type="button" onclick=fp1()>Test Button 1</button>
-        <div id="p1">p1</div>
-        <products-list 
-        v-bind:data2="data1"
-        ></products-list>
-        
-        
-        <blog-post
-          v-for="post in posts"
-          v-bind:key="post.id"
-          v-bind:title="post.title"
-        ></blog-post>
+    <br/>
+    <span>message1: {{ message1 }}</span>
+    <hr/>
+    <span>message2: {{ message2 }}</span>
+    
+    
+    <h1> {{ product_names }} </h1>
+    
+    <h2> {{ info }} </h2>
+    
+
+    
+    <blog-post
+      v-for="post in posts"
+      v-bind:key="post.id"
+      v-bind:title="post.title"
+    ></blog-post>
+    
 
 </div>`
 };
-
-const Home = {template: `<div></div>`};
 
 const Foo = {
     template: `<div>Foo page
@@ -143,7 +183,6 @@ const Page1 = {
 
     mounted:
         function () {
-
             axios
                 .get('https://api.coindesk.com/v1/bpi/currentprice.json')
                 .then(response => {
@@ -206,24 +245,12 @@ const Page1 = {
         </ul>
         {{ component_names }}
 
-        force reload
+        force reload CTRL click
 
         <greeting></greeting>
 
-
-        <h1 v-if="1===2">Vue is home!</h1>
-        <h1 v-else>Oh no 😢</h1>
-        <h1 v-if="page==='1'">Vue is 1!</h1>
-        <h1 v-if="page==='2'">Vue is 2!</h1>
-
-        <p v-if="false">1111</p>
-        <p v-else>2222</p>
-
-        <p v-if="true">3333</p>
-        <p v-else>4444</p>
-
-        <h1 v-if="ok">Yes</h1>
-        <h1 v-else>No</h1>
+        <h1 v-if="true">true</h1>
+        <h1 v-else>false</h1>
 
 
       </section>
@@ -244,11 +271,7 @@ const Page1 = {
           <input type="text" id="text1">
         </form>
 
-
       </section>
-
-
-
 
       <button-counter></button-counter>
 
@@ -267,8 +290,7 @@ const router = new VueRouter({
     routes // short for `routes: routes`
 });
 
-// 4. Create and mount the root instance.
-// Make sure to inject the router with the router option to make the whole app router-aware.
+// 4. Create and mount the root instance. inject the router with the router option to make the whole app router-aware.
 const app = new Vue({
     router
 }).$mount('#app');
