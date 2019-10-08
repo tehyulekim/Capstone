@@ -1,7 +1,7 @@
 ""r"""
 
 """
-from flask import Flask, request, json, jsonify, redirect, render_template, send_from_directory
+from flask import Flask, request, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 import logging
@@ -377,6 +377,79 @@ def pname():
     return jsonify(plist)
 
 
+# http://127.0.0.1:5000/pnew
+@app.route('/pnew', methods=['POST'])
+def pnew():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    name = req_data['name']
+
+    return_dict = {"name": "Error"}
+
+    try:
+        p_new = Product(name=name)
+        db.session.add(p_new)
+        db.session.commit()
+        return_dict['name'] = "Successful"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_dict)
+
+
+# http://127.0.0.1:5000/pdelete
+@app.route('/pdelete', methods=['POST'])
+def pdelete():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    name = req_data['name']
+
+    return_dict = {"name": "Error"}
+
+    try:
+        p_delete = Product.query.filter_by(name=name).first()
+        db.session.delete(p_delete)
+        db.session.commit()
+        return_dict['name'] = "Successful"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_dict)
+
+
+# http://127.0.0.1:5000/pedit
+@app.route('/pedit', methods=['POST'])
+def pedit():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    name = req_data['name']
+    field = req_data['field']
+    value = req_data['value']
+
+    return_dict = {"name": "Error"}
+
+    try:
+        # p_delete = Product.query.filter_by(name=name).first()
+        # db.session.delete(p_delete)
+        p_edit = Product.query.filter_by(name=name).first()
+        exec("p_edit." + field + " = '" + value + "'")  # p_edit.field = 'value'
+        db.session.commit()
+        return_dict['name'] = "Successful"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_dict)
+
+
 @app.route('/5', methods=['POST', 'GET'])
 def f5():
     if request.method == 'POST':
@@ -384,7 +457,6 @@ def f5():
         logging.debug("request.get_json() = " + str(request.get_json()))
         return jsonify(request.get_json())
     return "f5"
-
 
 
 #  http://127.0.0.1:5000/7

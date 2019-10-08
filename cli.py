@@ -54,6 +54,7 @@ def cu(name, version, *files):
         # Compress
         compress(name_zip, *files)
         # list_zip(name_zip) # prints list of files inside zip. Comment to turn off
+        # To do: take file list or wild cards, must extract file list, and wild card list, then pass to compress()
 
         # Upload
         upload(name_zip, BUCKET, name_zip)

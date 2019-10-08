@@ -253,6 +253,26 @@ tr, .no_border {
 }
 
 
+
+
+input {
+    font-size: 16px;
+    background-color: black;
+    border: medium inset darkgray;
+
+    color: white;
+    text-align: center;
+}
+button {
+    background-color: #000060;
+    color: lightgray;
+    border: medium outset cornflowerblue;
+    font-size: 16px;
+    padding: 14px;
+    border-radius: 30px;
+}
+
 .router-link-active {
     background-color: darkblue;
 }
+
