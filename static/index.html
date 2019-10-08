@@ -42,17 +42,20 @@
         <router-link to="/pnew">New</router-link>
         <router-link to="/pedit">Edit</router-link>
         <router-link to="/pdelete">Delete</router-link>
+
         <router-link to="/foo">Go to Foo</router-link>
         <router-link to="/bar">Go to Bar</router-link>
         <router-link to="/page1">Go to Page1</router-link>
+        <router-link to="/page2">Go to Page2</router-link>
       </nav>
 
       <nav id="nav2">
         <router-link to="/c">Components</router-link>
-        <router-link to="/cnew">New</router-link>
-        <router-link to="/cedit">Edit</router-link>
-        <router-link to="/cdelete">Delete</router-link>
-        <router-link to="/csearchsr">Search by Software Release</router-link>
+        <!--        cname with newest version.
+        when component clicked, show cversion.
+        When cversion clicked, show associated SR -->
+        <router-link to="/cversion">Version</router-link>
+        <router-link to="/csearchsr">Search SR</router-link>
       </nav>
 
       <nav id="nav3">

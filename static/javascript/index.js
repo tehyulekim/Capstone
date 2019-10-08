@@ -10,14 +10,11 @@ Vue.component('blog-post', {
     template: '<h4>{{ title }}</h4>'
 });
 
-
-Vue.component('products-list', {
-    props: ['data2'],
-    template: `
-<div>
-{{ data2 }}
-</div>`,
+Vue.component('product-list', {
+    props: ['name'],
+    template: '<h4>{{ name }}</h4>'
 });
+
 
 // https://vuejs.org/v2/guide/components.html
 Vue.component('button-counter', {
@@ -42,8 +39,16 @@ const Products = {
             product_new_response: null,
 
             product_selected: null,
+
             product_edit: null,
+            product_field: "name",
+            product_value: null,
+            product_edit_response: null,
+
+
             product_delete: null,
+            product_delete_response: null,
+
 
             picked: null,
             selected: null,
@@ -53,14 +58,45 @@ const Products = {
         }
     },
     methods: {
-        newProduct: function () {
-            axios.post('/pnew',
-                {
-                    product_name: this.product_new,
-                })
-                .then(response => (this.product_new_response = response.data))
+
+        pname: function () {
+            axios.get('/pname')
+                .then(response => (this.product_names = response.data))
                 .catch(error => console.log(error));
+
         },
+
+
+        pnew: function () {
+            axios.post('/pnew', {name: this.product_new})
+                .then(response => {
+                    this.product_new_response = response.data;
+                    this.pname()
+                })
+                .catch(error => console.log(error));
+
+        },
+
+        pdelete: function () {
+            axios.post('/pdelete', {name: this.product_delete})
+                .then(response => {
+                    this.product_delete_response = response.data;
+                    this.pname()
+                }).catch(error => console.log(error));
+        },
+
+        pedit: function () {
+            axios.post('/pedit', {
+                name: this.product_edit,
+                field: this.product_field,
+                value: this.product_value
+            })
+                .then(response => {
+                    this.product_edit_response = response.data;
+                    this.pname()
+                }).catch(error => console.log(error));
+        },
+
 
         func1: function () {
 
@@ -78,20 +114,47 @@ const Products = {
 
 
     mounted: function () {
-        axios.get('/pname')
-            .then(response => (this.product_names = response.data))
-            .catch(error => console.log(error));
+        this.pname()
     },
 
     template: `
 <div>
+
 <h1>Products Page</h1>
 <hr/>
 <h1> {{ product_names }} </h1>
+<product-list
+    v-for="product_name in product_names"
+    v-bind:key="product_name"
+    v-bind:name="product_name"
+></product-list>
 <hr/>
-<input v-model="product_new" placeholder="New Product">
-<span>Message is: </span>
+<label>New Product Name <input v-model="product_new"> </label>
+<span>Product to create: </span>
 <p>{{ product_new }}</p>
+
+<button v-on:click="pnew">New Product Button</button>
+<span>product response is : {{ this.product_new_response }}</span>
+
+<hr/>
+<label>Delete Product <input v-model="product_delete"> </label>
+<span>Product to delete: </span>
+<p>{{ product_delete }}</p>
+
+<button v-on:click="pdelete">Delete Product Button</button>
+<span>product response is : {{ this.product_delete_response }}</span>
+
+<hr/>
+<label>Edit Product Name<input v-model="product_edit"></label>
+<span>Product to edit is: <p>{{ product_edit }}</p></span>
+<label>Field (ie. id, name) <input v-model="product_field"> </label>
+<span><p>{{ product_field }}</p></span>
+<label>Field value <input v-model="product_value"> </label>
+<span><p>{{ product_value }}</p></span>
+
+<button v-on:click="pedit">Edit Product Button</button>
+<span>product response is : {{ this.product_edit_response }}</span>
+
 <hr/>
 
 <input type="radio" id="one" value="One" v-model="picked">
@@ -106,9 +169,6 @@ const Products = {
 <button v-on:click="func1">Func1 Button</button>
 <span>data1 is : {{data1}}</span>
 
-
-    
-    
 </div>`
 };
 
@@ -198,6 +258,7 @@ const Bar = {
   <button v-on:click="say('hi')">Say hi</button>
 </div>`
 };
+
 
 const Page1 = {
     data: function () {
@@ -345,16 +406,71 @@ const Page1 = {
       </section>
 
       <button-counter></button-counter>
+      
+      
+      <router-link v-bind:to="'/page2/para1/para2' + data1">New</router-link>
+      
 
 </div>`
 };
 
+const Page2 = {
+    data: function () {
+        return {
+            data222: "data222text",
+            data2: 2,
+            ver1: this.$route.params.ver,
+            component_name: this.$route.params.id,
+
+        };
+
+    },
+
+    methods: {
+        say: function (message) {
+            alert(message)
+        },
+
+    },
+
+
+    mounted: function () {
+
+        axios.get('/b')
+            .then(response => (this.data1 = response.data))
+            .catch(error => console.log(error));
+
+        axios.post('/5',
+            {
+                x: '1',
+                y: '2'
+            })
+            .then(response => (this.data2 = response.data))
+            .catch(error => console.log(error));
+
+    },
+
+    template: `<div>
+<button v-on:click="say('hi')">Say hi</button>
+<p>data222: {{ data222 }}</p>
+<p>data1: {{ data1 }}</p>
+<p>component_name: {{ component_name }}</p>
+<div>$route.params.id = {{ $route.params.id }}</div>
+<div>$route.params.ver = {{ $route.params.ver }}</div>
+<div>id :  {{ id }}</div>
+<div>ver :  {{ ver }}</div>
+</div>`
+};
+
+
 const routes = [
     {path: '/', component: Home},
     {path: '/p', component: Products},
-    {path: '/page1', component: Page1},
     {path: '/foo', component: Foo},
-    {path: '/bar', component: Bar}
+    {path: '/bar', component: Bar},
+    {path: '/page1', component: Page1},
+    {path: '/page2/:ver/:id', component: Page2},
+
 ];
 
 const router = new VueRouter({
