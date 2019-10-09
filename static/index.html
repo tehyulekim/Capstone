@@ -16,9 +16,6 @@
       <router-link id="homelogo" to="/">
         <img src="image/logo.png" alt="Home Logo">
       </router-link>
-      <!--      <a id="homelogo" href="index.html">-->
-      <!--        <img src="image/logo.png" alt="Home Logo">-->
-      <!--      </a>-->
 
       <!--      <label>-->
       <!--         <input type="text" placeholder="Search bar">-->
@@ -35,35 +32,26 @@
 
       <nav id="nav1">
         <!--      <a href="index.html" class="active">Home</a>-->
-
         <!-- `<router-link>` will be rendered as an `<a>` tag by default -->
-        <!--      include list and search -->
+
         <router-link to="/p">Products</router-link>
-        <router-link to="/pnew">New</router-link>
-        <router-link to="/pedit">Edit</router-link>
-        <router-link to="/pdelete">Delete</router-link>
+
+      </nav>
+
+      <nav id="nav2">
+        <router-link to="/sr">Software Releases</router-link>
+      </nav>
+
+      <nav id="nav3">
+        <router-link to="/c">Components</router-link>
+
 
         <router-link to="/foo">Go to Foo</router-link>
         <router-link to="/bar">Go to Bar</router-link>
         <router-link to="/page1">Go to Page1</router-link>
         <router-link to="/page2">Go to Page2</router-link>
-      </nav>
 
-      <nav id="nav2">
-        <router-link to="/c">Components</router-link>
-        <!--        cname with newest version.
-        when component clicked, show cversion.
-        When cversion clicked, show associated SR -->
-        <router-link to="/cversion">Version</router-link>
-        <router-link to="/csearchsr">Search SR</router-link>
-      </nav>
 
-      <nav id="nav3">
-        <router-link to="/sr">Software Releases</router-link>
-        <router-link to="/srnew">New</router-link>
-        <router-link to="/sredit">Edit</router-link>
-        <router-link to="/srdelete">Delete</router-link>
-        <router-link to="/srsearchc">Search by Component</router-link>
       </nav>
     </div>
 
@@ -74,11 +62,8 @@
   <div id="content" class="content">
     <main id="main">
 
-      <!-- route outlet -->
-      <!-- component matched by the route will render here -->
+      <!-- route outlet. component matched by the route will render here -->
       <router-view :key="$route.fullPath"></router-view>
-
-
 
 
     </main>
@@ -86,22 +71,272 @@
   </div>
 </div>
 
-<!-- development -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-
-<!-- production -->
+<!-- development ^, production v -->
 <!--<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10"></script>-->
 
 <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
-
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+<script type="text/x-template" id="grid-template">
+  <table>
+    <thead>
+    <tr>
+      <th v-for="key in columns"
+          @click="sortBy(key)"
+          :class="{ active: sortKey === key }">
+        {{ key | capitalize }}
+        <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
+          </span>
+      </th>
+      <th>Select</th>
+<!--      {{selected_row}}-->
+    </tr>
+    </thead>
+    <tbody>
+    <tr v-for="entry in filteredRows">
+      <td v-for="key in columns">
+        {{entry[key]}}
+      </td>
+      <td><label> <input type="radio"
+                         v-bind:value="entry"
+                         v-model="selected_row"
+                         v-on:change="$emit('input', selected_row)"
+      > </label></td>
+    </tr>
+    </tbody>
+  </table>
+</script>
+
+<script type="text/x-template" id="home-template">
+  <div>
+    <p>Hello hello hello</p>
+    <h1>Software Component Store and Release Assembly Tools</h1>
+  </div>
+</script>
+<script type="text/x-template" id="products-template">
+  <div>
+    <h1>Products Page</h1>
+    <hr/>
+    <h1> {{ product_names }} </h1>
+    <product-list
+        v-for="product_name in product_names"
+        v-bind:key="product_name"
+        v-bind:name="product_name"
+    ></product-list>
+    <hr/>
+    <label>New Product Name <input v-model="product_new"> </label>
+    <span>Product to create: </span>
+    <p>{{ product_new }}</p>
+
+    <button v-on:click="pnew">New Product Button</button>
+    <span>product response is : {{ this.product_new_response }}</span>
+
+    <hr/>
+    <label>Delete Product <input v-model="product_delete"> </label>
+    <span>Product to delete: </span>
+    <p>{{ product_delete }}</p>
+
+    <button v-on:click="pdelete">Delete Product Button</button>
+    <span>product response is : {{ this.product_delete_response }}</span>
+
+    <hr/>
+    <label>Edit Product Name<input v-model="product_edit"></label>
+    <span>Product to edit is: <p>{{ product_edit }}</p></span>
+    <label>Field (ie. id, name) <input v-model="product_field"> </label>
+    <span><p>{{ product_field }}</p></span>
+    <label>Field value <input v-model="product_value"> </label>
+    <span><p>{{ product_value }}</p></span>
+
+    <button v-on:click="pedit">Edit Product Button</button>
+    <span>product response is : {{ this.product_edit_response }}</span>
+  </div>
+</script>
+<script type="text/x-template" id="software-releases-template">
+  <div>
+    <form id="search">
+      Search <input name="query" v-model="searchQuery">
+    </form>
+    <demo-grid
+        :rows="gridData"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+        v-model="selectedRow"
+    ></demo-grid>
+    <h4> received: {{ selectedRow }}</h4>
+    <h4> received: {{ selectedRow.name }}</h4>
+
+  </div>
+</script>
+<script type="text/x-template" id="srversion-template"></script>
+<script type="text/x-template" id="components-template">
+  <div>
+    {{ component_highest }}
+    <h3 v-for="component in component_highest">
+      name: {{ component.name }}, Version: {{component.version}}
+      <router-link v-bind:to="'/c/' + component.name">More Versions</router-link>
+    </h3>
+  </div>
+</script>
+<script type="text/x-template" id="component-version-template">
+  <div>
+    Component Name = {{ $route.params.name }}
+    <hr/>
+    Component versions = {{component_versions }}
+    <h3 v-for="component_version in component_versions">
+      Version: {{component_version}}
+      <router-link v-bind:to="'/c/' + $route.params.name + '/' + component_version">Associated SR</router-link>
+    </h3>
+  </div>
+</script>
+<script type="text/x-template" id="component-sr-template">
+  <div>
+    Component Name = {{ $route.params.name }}
+    Component Version = {{ $route.params.version }}
+    <hr/>
+    raw data = {{srlist }}
+    <h3 v-for="sr in srlist">
+      Product name: {{ sr.product_name }}
+      Version number: {{ sr.version_number}}
+      <router-link v-bind:to="'/sr/' + sr.product_name + '/' + sr.version_number">Associated SR</router-link>
+    </h3>
+  </div>
+
+</script>
+<script type="text/x-template" id="foo-template">
+  <div>
+    <span>message1: {{ message1 }}</span>
+    <hr/>
+    <span>message2: {{ message2 }}</span>
+    <hr/>
+  </div>
+</script>
+<script type="text/x-template" id="bar-template"></script>
+<script type="text/x-template" id="page1-template">
+  <div>
+    <section>
+      <h1>Section heading</h1>
+      <hr/>
+      <button v-on:click="post5">Post5 Button</button>
+      <span>data1 is : {{data1}}</span>
+
+      <button v-on:click="func1">Func1 Button</button>
+      <span>data1 is : {{data1}}</span>
+
+      <hr/>
+
+      <button type="button" onclick="">Test Button 1</button>
+      <button type="button" onclick="">Test Button 2</button>
+      <button type="button" onclick="">Test Button 3</button>
+      <button type="button" onclick="">Test Button 4</button>
+      <button type="button" onclick=f5()>Test Button 5</button>
+      <button type="button" onclick=f6()>Test Button 6</button>
+      <button type="button" onclick=f7()>Test Button 7</button>
+
+      <div id="id1">1</div>
+      <div id="id2">2</div>
+      <div id="id3">3</div>
+      <div id="id4">4</div>
+      <div id="id5">5</div>
+      <div id="id6">6</div>
+
+      <br/>
+
+    </section>
+
+    <section>
+      <h1>Vue App</h1>
+      <ul>
+        <li v-for="product in products">
+          {{ product }}
+          {{ product.name }}
+          {{ product.property}}
+          {{ message }}
+        </li>
+      </ul>
+
+
+      <label>
+        <input type="text" v-model="message">
+        {{ message }}
+      </label>
+
+
+      Component changes
+      <ul>
+        <li v-for="component_name in component_names">
+          {{ component_name }}
+        </li>
+      </ul>
+      {{ component_names }}
+
+      force reload CTRL click
+
+      <h1 v-if="true">true</h1>
+      <h1 v-else>false</h1>
+
+
+    </section>
+
+    <section>
+      <h1>HTML form input</h1>
+      <form action="http://127.0.0.1:5000/6" method="post">
+        <label>
+          <input type="text" name="name1" value="v1">
+          <input type="text" name="name2" value="v2">
+          <input type="text" name="name3" value="v3">
+          <input type="submit" value="Submit">
+        </label>
+      </form>
+
+      <form onsubmit="f1()">
+        <label for="text1">text1 label</label>
+        <input type="text" id="text1">
+      </form>
+
+    </section>
+
+    <button-counter></button-counter>
+
+    <hr/>
+
+    <input type="radio" id="one" value="One" v-model="picked">
+    <label for="one">One</label>
+    <br>
+    <input type="radio" id="two" value="Two" v-model="picked">
+    <label for="two">Two</label>
+    <br>
+    <span>Picked: {{ picked }}</span>
+    <hr/>
+
+
+    <router-link v-bind:to="'/page2/para1/para2' + data1">Go to Page2</router-link>
+
+
+  </div>
+</script>
+<script type="text/x-template" id="page2-template">
+  <div>
+    <button v-on:click="say('hi')">Say hi</button>
+    <p>data222: {{ data222 }}</p>
+    <p>data1: {{ data1 }}</p>
+    <p>component_name: {{ component_name }}</p>
+    <div>$route.params.id = {{ $route.params.id }}</div>
+    <div>$route.params.ver = {{ $route.params.ver }}</div>
+    <div>id : {{ id }}</div>
+    <div>ver : {{ ver }}</div>
+  </div>
+</script>
+
+<!--
+<script type="text/x-template" id="-template"></script>
+
+Must load templates before index.js
+-->
 
 <script src="javascript/index.js"></script>
 <script src="javascript/experiment.js"></script>
-
-<script>
-
-</script>
 
 </body>
 </html>
