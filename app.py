@@ -1,6 +1,8 @@
 ""r"""
 
 """
+from itertools import groupby
+
 from flask import Flask, request, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 
@@ -27,7 +29,7 @@ class Product(db.Model):
 class SoftwareRelease(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(255), db.ForeignKey('product.name'))
-    version_number = db.Column(db.String(255))
+    version_number = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(255), default='In Development')
     __table_args__ = (db.UniqueConstraint('product_name', 'version_number'),)
     product = db.relationship("Product", back_populates="software_releases")
@@ -36,8 +38,8 @@ class SoftwareRelease(db.Model):
 
 class Component(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-    version = db.Column(db.String(255))
+    name = db.Column(db.String(255), nullable=False)
+    version = db.Column(db.String(255), nullable=False)
     __table_args__ = (db.UniqueConstraint('name', 'version'),)
     software_releases = db.relationship("Association", back_populates="component", cascade="all, delete, delete-orphan")
 
@@ -151,6 +153,7 @@ s1.version = 1
 
 
 
+
 db.session.rollback()
 db.drop_all()
 
@@ -248,15 +251,6 @@ def bring():
     return jsonify(r1)
 
 
-# save component > SQL, and create new recipe
-# http://127.0.0.1:5000/c
-@app.route('/c', methods=['POST', 'GET'])
-def create():
-    d1 = {'11': 111, '22': 222}
-
-    return jsonify(d1)
-
-
 # http://127.0.0.1:5000/r
 @app.route('/r', methods=['POST', 'GET'])
 def recipe():
@@ -313,20 +307,48 @@ def view():
     return jsonify(viewall)
 
 
-# Get a list of all component names
-# http://127.0.0.1:5000/cname
-@app.route('/cname', methods=['POST', 'GET'])
-def cname():
-    if request.method == 'POST':
-        return request.data
+r"""
 
+# http://127.0.0.1:5000/pname
+@app.route('/pname', methods=['POST', 'GET'])
+def pname():
+    pquery = Product.query.all()
+
+    plist = []
+    for p in pquery:
+        plist.append(p.name)
+
+    return jsonify(plist)
+
+
+"""
+
+
+# unique components with its highest version number
+# http://127.0.0.1:5000/c
+@app.route('/c', methods=['POST', 'GET'])
+def create():
     cquery = Component.query.all()
 
     clist = []
     for c in cquery:
-        clist.append(c.name + "--v" + c.version)
+        clist.append({'name': c.name, 'version': c.version})
 
-    # Component Names
+    clist_sorted = sorted(clist, key=lambda x: x['name'])
+
+    clist_version_max = []
+    for k, g in groupby(clist_sorted, lambda x: x['name']):
+        clist_version_max.append(max(g, key=lambda x: x['version']))
+
+    return jsonify(clist_version_max)
+
+
+# Get a list of all component names
+# http://127.0.0.1:5000/cname
+@app.route('/cname', methods=['POST', 'GET'])
+def cname():
+    cquery = Component.query.all()
+
     cset = set()
     for c in cquery:
         cset.add(c.name)
@@ -338,31 +360,55 @@ def cname():
         "component_names": str(cname_list),
     }
 
-    return jsonify(cname_dict)
+    # return jsonify(cname_dict)
+    return jsonify(cname_list)
 
 
 # Get a list of versions for a specific component
 # http://127.0.0.1:5000/cversion
-@app.route('/cversion', methods=['POST', 'GET'])
+@app.route('/cversion', methods=['POST'])
 def cversion():
-    if request.method == 'POST':
+    """
+    cversion is POST. request body example: {"name": "component_name"}
+    :return:
+    """
+    req_data = request.get_json()  # <class 'dict'>
+    logging.debug("req_data = " + str(req_data))
+    name = req_data['name']
 
-        component = request.get_json()  # <class 'dict'>
-        name = component['name']
+    cquery = Component.query.filter_by(name=name).all()
 
-        cquery = Component.query.filter_by(name=name).all()
+    clist = []
+    for c in cquery:
+        clist.append(c.version)
 
-        clist = []
-        for c in cquery:
-            clist.append(c.version)
+    cversion_sorted = sorted(clist)
 
-        cversion_sorted = sorted(clist)
+    return jsonify(cversion_sorted)
 
-        cversion_dict = {"component_versions": str(cversion_sorted)}
 
-        return jsonify(cversion_dict)
+# Get a list of software releases associated with a component
+# http://127.0.0.1:5000/csearchsr
+@app.route('/csearchsr', methods=['POST'])
+def csearchsr():
+    """
+    csearchsr is POST. request body example: {"name": "component_name", "version": "v"}
+    :return:
+    """
+    req_data = request.get_json()  # <class 'dict'>
+    logging.debug("req_data = " + str(req_data))
+    name = req_data['name']
+    version = req_data['version']
 
-    return 'cversion is POST. request body example: {"name": "component_name"}'
+    component = Component.query.filter_by(name=name, version=version).first()
+    c_sr_association = component.software_releases
+
+    srlist = []
+    for a in c_sr_association:
+        srlist.append({'product_name': a.software_release.product_name,
+                      'version_number': a.software_release.version_number})
+
+    return jsonify(srlist)
 
 
 # http://127.0.0.1:5000/pname
