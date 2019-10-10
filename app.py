@@ -95,7 +95,6 @@ a4 = Association.query.filter_by(id=4).first()
 a12 = Association.query.filter_by(id=12).first()
 
 
-
 a1 = Association()
 a1.component = c1
 s1.components.append(a1)
@@ -146,19 +145,14 @@ c1 = Component.query.filter_by(id=1).first()
 s1 = SoftwareRelease.query.filter_by(id=1).first()
 s2 = SoftwareRelease.query.filter_by(id=2).first()
 
-
 s1.name= "s1"
 s1.version = 1
 
 
 
-
-
 db.session.rollback()
 db.drop_all()
-
 db.engine.table_names()
-
 
 
 """
@@ -174,37 +168,34 @@ def index():
 
 # add component
 # http://127.0.0.1:5000/add
-@app.route('/add', methods=['POST', 'GET'])
+@app.route('/add', methods=['POST'])
 def add():
-    if request.method == 'POST':
-        # component = json.loads(request.data)  # {'name': name, 'version': version} # <class 'dict'>
+    # component = json.loads(request.data)  # {'name': name, 'version': version} # <class 'dict'>
 
-        component = request.get_json()  # <class 'dict'>
-        name = component['name']
-        version = component['version']
-        logging.debug("name = " + str(name))
-        logging.debug("version = " + str(version))
+    component = request.get_json()  # <class 'dict'>
+    name = component['name']
+    version = component['version']
+    logging.debug("name = " + str(name))
+    logging.debug("version = " + str(version))
 
-        # test with POSTMAN {"name": "c1", "version": "1"}
-        # query component
-        query_component = db.session.query(Component).filter_by(name=name, version=version).first()
+    # test with POSTMAN {"name": "c1", "version": "1"}
+    # query component
+    query_component = db.session.query(Component).filter_by(name=name, version=version).first()
 
-        # check if exist
-        if query_component is not None:
-            return "409 Conflict. Component already exists"
+    # check if exist
+    if query_component is not None:
+        return "409 Conflict. Component already exists"
 
-        # add component
-        component_new = Component(name=name, version=version)
-        db.session.add(component_new)
-        db.session.commit()
+    # add component
+    component_new = Component(name=name, version=version)
+    db.session.add(component_new)
+    db.session.commit()
 
-        # j1 = jsonify(username="user1", email="email2")
-        # logging.debug("j1 = " + str(j1))
-        # logging.debug("type(j1) = " + str(type(j1)))  # <class 'flask.wrappers.Response'>
+    # j1 = jsonify(username="user1", email="email2")
+    # logging.debug("j1 = " + str(j1))
+    # logging.debug("type(j1) = " + str(type(j1)))  # <class 'flask.wrappers.Response'>
 
-        return "201 Created. Component is added"
-
-    return '/add page text message'
+    return "201 Created. Component is added"
 
 
 # check component's existence
@@ -224,7 +215,7 @@ def check():
     return "404 Not Found. Component does not exist"
 
 
-# bring recipe
+# bring sample recipe
 # http://127.0.0.1:5000/b
 @app.route('/b', methods=['POST', 'GET'])
 def bring():
@@ -255,18 +246,15 @@ def bring():
 @app.route('/r', methods=['POST', 'GET'])
 def recipe():
     if request.method == 'POST':
-        return request.data
+        return jsonify(request.data)
 
     return 'r page text message'
 
 
-# view all
+# view all for debugging
 # http://127.0.0.1:5000/v
 @app.route('/v', methods=['POST', 'GET'])
 def view():
-    if request.method == 'POST':
-        return request.data
-
     pquery = Product.query.all()
     squery = SoftwareRelease.query.all()
     cquery = Component.query.all()
@@ -290,8 +278,6 @@ def view():
         cset.add(c.name)
     cname = sorted(list(cset))
 
-    # also make components list with highest version number
-
     alist = []
     for a in aquery:
         alist.append(a.software_release.product_name + "_" + a.component.name)
@@ -307,35 +293,21 @@ def view():
     return jsonify(viewall)
 
 
-r"""
-
-# http://127.0.0.1:5000/pname
-@app.route('/pname', methods=['POST', 'GET'])
-def pname():
-    pquery = Product.query.all()
-
-    plist = []
-    for p in pquery:
-        plist.append(p.name)
-
-    return jsonify(plist)
-
-
-"""
-
-
-# unique components with its highest version number
-# http://127.0.0.1:5000/c
-@app.route('/c', methods=['POST', 'GET'])
-def create():
+# unique component list, each its max (highest) version number
+# http://127.0.0.1:5000/cmax
+@app.route('/cmax', methods=['GET'])
+def cmax():
     cquery = Component.query.all()
 
     clist = []
     for c in cquery:
-        clist.append({'name': c.name, 'version': c.version})
+        clist.append({'name': c.name,
+                      'version': c.version})
 
+    # sort by name, which groups them together
     clist_sorted = sorted(clist, key=lambda x: x['name'])
 
+    # sort name group by version, then append one with max version
     clist_version_max = []
     for k, g in groupby(clist_sorted, lambda x: x['name']):
         clist_version_max.append(max(g, key=lambda x: x['version']))
@@ -343,9 +315,9 @@ def create():
     return jsonify(clist_version_max)
 
 
-# Get a list of all component names
+# Get a list of all component names, unique name
 # http://127.0.0.1:5000/cname
-@app.route('/cname', methods=['POST', 'GET'])
+@app.route('/cname', methods=['GET'])
 def cname():
     cquery = Component.query.all()
 
@@ -354,13 +326,6 @@ def cname():
         cset.add(c.name)
     cname_list = sorted(list(cset))
 
-    # also make components list with highest version number
-
-    cname_dict = {
-        "component_names": str(cname_list),
-    }
-
-    # return jsonify(cname_dict)
     return jsonify(cname_list)
 
 
@@ -380,9 +345,10 @@ def cversion():
 
     clist = []
     for c in cquery:
-        clist.append(c.version)
+        clist.append({'name': c.name,
+                      'version': c.version})
 
-    cversion_sorted = sorted(clist)
+    cversion_sorted = sorted(clist, key=lambda x: x['name'])
 
     return jsonify(cversion_sorted)
 
@@ -406,19 +372,19 @@ def csearchsr():
     srlist = []
     for a in c_sr_association:
         srlist.append({'product_name': a.software_release.product_name,
-                      'version_number': a.software_release.version_number})
+                       'version_number': a.software_release.version_number})
 
     return jsonify(srlist)
 
 
 # http://127.0.0.1:5000/pname
-@app.route('/pname', methods=['POST', 'GET'])
+@app.route('/pname', methods=['GET'])
 def pname():
     pquery = Product.query.all()
 
     plist = []
     for p in pquery:
-        plist.append(p.name)
+        plist.append({'name': p.name})
 
     return jsonify(plist)
 
@@ -431,19 +397,19 @@ def pnew():
 
     name = req_data['name']
 
-    return_dict = {"name": "Error"}
+    return_code = {"name": "Error"}
 
     try:
         p_new = Product(name=name)
         db.session.add(p_new)
         db.session.commit()
-        return_dict['name'] = "Successful"
+        return_code['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_dict)
+        return jsonify(return_code)
 
 
 # http://127.0.0.1:5000/pdelete
@@ -454,19 +420,19 @@ def pdelete():
 
     name = req_data['name']
 
-    return_dict = {"name": "Error"}
+    return_code = {"name": "Error"}
 
     try:
         p_delete = Product.query.filter_by(name=name).first()
         db.session.delete(p_delete)
         db.session.commit()
-        return_dict['name'] = "Successful"
+        return_code['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_dict)
+        return jsonify(return_code)
 
 
 # http://127.0.0.1:5000/pedit
@@ -479,7 +445,7 @@ def pedit():
     field = req_data['field']
     value = req_data['value']
 
-    return_dict = {"name": "Error"}
+    return_code = {"name": "Error"}
 
     try:
         # p_delete = Product.query.filter_by(name=name).first()
@@ -487,13 +453,124 @@ def pedit():
         p_edit = Product.query.filter_by(name=name).first()
         exec("p_edit." + field + " = '" + value + "'")  # p_edit.field = 'value'
         db.session.commit()
-        return_dict['name'] = "Successful"
+        return_code['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_dict)
+        return jsonify(return_code)
+
+
+# software release all
+# http://127.0.0.1:5000/sr
+@app.route('/sr', methods=['GET'])
+def sr():
+    srquery = SoftwareRelease.query.all()
+
+    srlist = []
+    for sr in srquery:
+        srlist.append(
+            {'product_name': sr.product_name,
+             'version_number': sr.version_number,
+             'status': sr.status})
+
+    return jsonify(srlist)
+
+
+# http://127.0.0.1:5000/srnew
+@app.route('/srnew', methods=['POST'])
+def srnew():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+
+    return_code = {"name": "Error"}
+
+    try:
+        sr_new = SoftwareRelease(product_name=product_name, version_number=version_number)
+        db.session.add(sr_new)
+        db.session.commit()
+        return_code['name'] = "Success"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_code)
+
+
+# http://127.0.0.1:5000/srdelete
+@app.route('/srdelete', methods=['POST'])
+def srdelete():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+
+    return_code = {"name": "Error"}
+
+    try:
+        sr_delete = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+        db.session.delete(sr_delete)
+        db.session.commit()
+        return_code['name'] = "Success"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_code)
+
+
+# http://127.0.0.1:5000/sredit
+@app.route('/sredit', methods=['POST'])
+def sredit():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+    field = req_data['field']
+    value = req_data['value']
+
+    return_code = {"name": "Error"}
+
+    try:
+        # p_delete = Product.query.filter_by(name=name).first()
+        # db.session.delete(p_delete)
+        sr_edit = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+        exec("sr_edit." + field + " = '" + value + "'")  # sr_edit.field = 'value'
+        db.session.commit()
+        return_code['name'] = "Success"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_code)
+
+
+# /sr_add_c
+# sr name ver, c name ver, URL =>
+
+
+# /sr_remove_c
+# sr name ver, c name ver URL ( selected from clist)
+
+
+# /sr_copy
+# sr name ver, sr ver => in dev
+
+
+
+# /recipe
+# complete recipe list for cli
+# take sr name ver, return full json recipe
+
 
 
 @app.route('/5', methods=['POST', 'GET'])
@@ -505,26 +582,6 @@ def f5():
     return "f5"
 
 
-#  http://127.0.0.1:5000/7
-@app.route('/7', methods=['POST', 'GET'])
-def f7():
-    c1 = {'name': 'x',
-          'version': '1'}
-    c2 = {'name': 'y', 'version': '2'}
-
-    return jsonify(c1, c2)
-
-
-#  http://127.0.0.1:5000/8
-@app.route('/8', methods=['POST', 'GET'])
-def f8():
-    c1 = {'name': 'x',
-          'version': '1'}
-    c2 = {'name': 'y', 'version': '2'}
-
-    a1 = [c1, c2]
-
-    return jsonify(a1)
 
 
 if __name__ == '__main__':

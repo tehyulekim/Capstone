@@ -13,12 +13,18 @@ SR list for csr
 */
 
 // https://vuejs.org/v2/examples/grid-component.html
-Vue.component('demo-grid', {
-    template: '#grid-template',
+Vue.component('table-grid', {
+    template: '#table-grid-template',
     props: {
         rows: Array,
         columns: Array,
         filterKey: String,
+
+        // To enable eg. v-bind:detail-col="true"
+        selectCol: false,
+        cVerCol: false,
+        cSrCol: false,
+
     },
     data: function () {
         let sortOrders = {};
@@ -29,7 +35,7 @@ Vue.component('demo-grid', {
             sortKey: '',
             sortOrders: sortOrders,
 
-            selected_row: null,
+            selected_row: {},
         }
     },
     computed: {
@@ -68,47 +74,60 @@ Vue.component('demo-grid', {
     }
 });
 
-Vue.component('product-list', {
-    props: ['name'],
-    template: '<h4>{{ name }}</h4>'
-});
 
 const Home = {template: '#home-template'};
 
 const Products = {
+    template: '#products-template',
+
     data() {
         return {
-            product_names: null,
-            product_new: null,
-            product_new_response: null,
+            products: [{}, {}],
 
-            product_edit: null,
+            product_name: null,
+            product_name_response: {},
+
             product_field: "name",
-            product_value: null,
-            product_edit_response: null,
+            product_value: "",
+            product_edit_response: {},
 
 
-            product_delete: null,
-            product_delete_response: null,
-
-
-            product_selected: null,
+            searchQuery: '',
+            // must provide object structure template to use {{object.name}}
+            selectedRow: {name: ''},
 
         }
     },
+
+    computed: {
+        gridData: function () {
+            return this.products
+        },
+        gridColumns: function () {
+            let col = [];
+            for (const key in this.products[0]) {
+                col.push(key)
+            }
+            return col
+        },
+        product_edit: function () {
+            return this.selectedRow.name
+        }
+    },
+
     methods: {
 
         pname: function () {
             axios.get('/pname')
-                .then(response => (this.product_names = response.data))
+                .then(response => (this.products = response.data))
                 .catch(error => console.log(error));
         },
 
 
         pnew: function () {
-            axios.post('/pnew', {name: this.product_new})
+            axios.post('/pnew', {name: this.product_name})
                 .then(response => {
-                    this.product_new_response = response.data;
+                    this.product_name_response = response.data;
                     this.pname()
                 })
                 .catch(error => console.log(error));
@@ -116,9 +135,9 @@ const Products = {
         },
 
         pdelete: function () {
-            axios.post('/pdelete', {name: this.product_delete})
+            axios.post('/pdelete', {name: this.product_name})
                 .then(response => {
-                    this.product_delete_response = response.data;
+                    this.product_name_response = response.data;
                     this.pname()
                 }).catch(error => console.log(error));
         },
@@ -142,10 +161,11 @@ const Products = {
         this.pname()
     },
 
-    template: '#products-template'
 };
 
 const SoftwareReleases = {
+    template: '#software-releases-template',
+
     data: function () {
         return {
             searchQuery: '',
@@ -158,34 +178,19 @@ const SoftwareReleases = {
             ],
 
             // must provide object structure template to use {{object.name}}
-            selectedRow: {name:''},
+            selectedRow: {name: ''},
 
         };
     },
 
     methods: {
-        say: function (message) {
-            alert(message)
-        },
+
     },
 
     mounted: function () {
 
-        axios.get('/b')
-            .then(response => (this.data1 = response.data))
-            .catch(error => console.log(error));
-
-        axios.post('/5',
-            {
-                x: '1',
-                y: '2'
-            })
-            .then(response => (this.data2 = response.data))
-            .catch(error => console.log(error));
-
     },
 
-    template: '#software-releases-template'
 };
 
 const SRVersion = {
@@ -262,16 +267,28 @@ const SRComponent = {
 };
 
 const Components = {
+    template: '#components-template',
+
     data: function () {
         return {
-            component_names: null,
-            component_highest: null,
+            component_highest: [{}],
+
+            gridColumns: ['name', 'version'],
+            searchQuery: '',
+            // selectedRow: {name: '', version: ''},
+
         };
+    },
+
+    computed: {
+        gridData: function () {
+            return this.component_highest
+        },
     },
 
     methods: {
         c_high: function () {
-            axios.get('/c')
+            axios.get('/cmax')
                 .then(response => (this.component_highest = response.data))
                 .catch(error => console.log(error));
         },
@@ -281,14 +298,25 @@ const Components = {
         this.c_high()
     },
 
-    template: '#components-template'
 };
 
 const ComponentVersion = {
+    template: '#component-version-template',
+
     data: function () {
         return {
-            component_versions: null,
+            component_versions: [],
+
+            gridColumns: ['name', 'version'],
+            searchQuery: '',
+
         };
+    },
+
+    computed: {
+        gridData: function () {
+            return this.component_versions
+        },
     },
 
     methods: {
@@ -306,7 +334,6 @@ const ComponentVersion = {
         this.c_versions()
     },
 
-    template: '#component-version-template'
 };
 
 // Associated SR

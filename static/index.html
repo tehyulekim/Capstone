@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 -->
-<html lang="en">
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
   <title>Component Store</title>
@@ -79,7 +79,7 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 
-<script type="text/x-template" id="grid-template">
+<script type="text/x-template" id="table-grid-template">
   <table>
     <thead>
     <tr>
@@ -90,8 +90,10 @@
         <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
           </span>
       </th>
-      <th>Select</th>
-<!--      {{selected_row}}-->
+      <th v-if="cVerCol">Versions</th>
+      <th v-if="cSrCol">Software Releases</th>
+      <th v-if="selectCol">Select</th>
+      <!--      {{selected_row}}-->
     </tr>
     </thead>
     <tbody>
@@ -99,10 +101,16 @@
       <td v-for="key in columns">
         {{entry[key]}}
       </td>
-      <td><label> <input type="radio"
-                         v-bind:value="entry"
-                         v-model="selected_row"
-                         v-on:change="$emit('input', selected_row)"
+      <td v-if="cVerCol">
+        <router-link v-bind:to="'/c/' + entry.name">Versions</router-link>
+      </td>
+      <td v-if="cSrCol">
+        <router-link v-bind:to="'/c/' + $route.params.name + '/' + entry.version">Software Releases</router-link>
+      </td>
+      <td v-if="selectCol"><label> <input type="radio"
+                                          v-bind:value="entry"
+                                          v-model="selected_row"
+                                          v-on:change="$emit('input', selected_row)"
       > </label></td>
     </tr>
     </tbody>
@@ -111,89 +119,149 @@
 
 <script type="text/x-template" id="home-template">
   <div>
-    <p>Hello hello hello</p>
     <h1>Software Component Store and Release Assembly Tools</h1>
   </div>
 </script>
 <script type="text/x-template" id="products-template">
   <div>
-    <h1>Products Page</h1>
+    <h1>Products</h1>
     <hr/>
-    <h1> {{ product_names }} </h1>
-    <product-list
-        v-for="product_name in product_names"
-        v-bind:key="product_name"
-        v-bind:name="product_name"
-    ></product-list>
-    <hr/>
-    <label>New Product Name <input v-model="product_new"> </label>
-    <span>Product to create: </span>
-    <p>{{ product_new }}</p>
-
-    <button v-on:click="pnew">New Product Button</button>
-    <span>product response is : {{ this.product_new_response }}</span>
+    <label><input v-model="product_name" placeholder="Product Name"></label>
+    <button v-on:click="pnew">Create Product</button>
+    <button v-on:click="pdelete">Delete Product</button>
+    <span>{{ this.product_name_response.name }}</span>
 
     <hr/>
-    <label>Delete Product <input v-model="product_delete"> </label>
-    <span>Product to delete: </span>
-    <p>{{ product_delete }}</p>
+    <h2>Selected: [ {{product_edit}} ]</h2>
+    <label>
+      <select v-model="product_field">
+        <option v-for="option in gridColumns" v-bind:value="option">
+          {{ option }}
+        </option>
+      </select>
+    </label>
+    <label><input v-model="product_value" placeholder="New Value"> </label>
 
-    <button v-on:click="pdelete">Delete Product Button</button>
-    <span>product response is : {{ this.product_delete_response }}</span>
-
+    <button v-on:click="pedit">Edit Product</button>
+    <span>{{ product_edit_response.name }}</span>
     <hr/>
-    <label>Edit Product Name<input v-model="product_edit"></label>
-    <span>Product to edit is: <p>{{ product_edit }}</p></span>
-    <label>Field (ie. id, name) <input v-model="product_field"> </label>
-    <span><p>{{ product_field }}</p></span>
-    <label>Field value <input v-model="product_value"> </label>
-    <span><p>{{ product_value }}</p></span>
+    <br/>
 
-    <button v-on:click="pedit">Edit Product Button</button>
-    <span>product response is : {{ this.product_edit_response }}</span>
+    <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
+    <table-grid
+        :rows="gridData"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+        :select-col="true"
+        v-model="selectedRow"
+    ></table-grid>
+
   </div>
 </script>
 <script type="text/x-template" id="software-releases-template">
   <div>
+    <hr/>
+    <h1>Products</h1>
+    <hr/>
+    <label><input v-model="product_name" placeholder="Product Name"></label>
+    <button v-on:click="pnew">Create Product</button>
+    <button v-on:click="pdelete">Delete Product</button>
+    <span>{{ this.product_name_response.name }}</span>
+
+    <hr/>
+    <h2>Selected: [ {{product_edit}} ]</h2>
+    <label>
+      <select v-model="product_field">
+        <option v-for="option in gridColumns" v-bind:value="option">
+          {{ option }}
+        </option>
+      </select>
+    </label>
+    <label><input v-model="product_value" placeholder="New Value"> </label>
+
+    <button v-on:click="pedit">Edit Product</button>
+    <span>{{ product_edit_response.name }}</span>
+    <hr/>
+    <br/>
+
+    <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
+    <table-grid
+        :rows="gridData"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+        :select-col="true"
+        v-model="selectedRow"
+    ></table-grid>
+
+    <hr/>
     <form id="search">
       Search <input name="query" v-model="searchQuery">
     </form>
-    <demo-grid
+    <table-grid
         :rows="gridData"
         :columns="gridColumns"
         :filter-key="searchQuery"
         v-model="selectedRow"
-    ></demo-grid>
+    ></table-grid>
     <h4> received: {{ selectedRow }}</h4>
     <h4> received: {{ selectedRow.name }}</h4>
-
   </div>
 </script>
 <script type="text/x-template" id="srversion-template"></script>
+
 <script type="text/x-template" id="components-template">
   <div>
-    {{ component_highest }}
-    <h3 v-for="component in component_highest">
-      name: {{ component.name }}, Version: {{component.version}}
-      <router-link v-bind:to="'/c/' + component.name">More Versions</router-link>
-    </h3>
+    <h1>Components</h1>
+    <h3>Component and Newest Version</h3>
+    <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
+    <table-grid
+        :rows="gridData"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+        :c-ver-col="true"
+    ></table-grid>
+
+    <!--    <h3 v-for="component in component_highest">
+          name: {{ component.name }}, Version: {{component.version}}
+          <router-link v-bind:to="'/c/' + component.name">More Versions</router-link>
+        </h3>-->
+
   </div>
 </script>
 <script type="text/x-template" id="component-version-template">
   <div>
-    Component Name = {{ $route.params.name }}
-    <hr/>
-    Component versions = {{component_versions }}
-    <h3 v-for="component_version in component_versions">
-      Version: {{component_version}}
-      <router-link v-bind:to="'/c/' + $route.params.name + '/' + component_version">Associated SR</router-link>
-    </h3>
+    <h1>Component Versions</h1>
+    <h3>Component Name: {{ $route.params.name }}</h3>
+    <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
+    <table-grid
+        :rows="gridData"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+        :c-sr-col="true"
+    ></table-grid>
+
+    <!--    <hr/>
+        Component versions = {{component_versions }}
+        <h3 v-for="component_version in component_versions">
+          Version: {{component_version}}
+          <router-link v-bind:to="'/c/' + $route.params.name + '/' + component_version">Associated SR</router-link>
+        </h3>-->
   </div>
 </script>
 <script type="text/x-template" id="component-sr-template">
   <div>
-    Component Name = {{ $route.params.name }}
-    Component Version = {{ $route.params.version }}
+    <h1>Component Versions</h1>
+    <h3>Component Name: {{ $route.params.name }}</h3>
+    <h3>Component Version: {{ $route.params.version }}</h3>
+
+    <!-- sr list from sr -->
+    <table-grid
+        :rows="gridData"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+        :c-srlist-col="true"
+    ></table-grid>
+
     <hr/>
     raw data = {{srlist }}
     <h3 v-for="sr in srlist">
