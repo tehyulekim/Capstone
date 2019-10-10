@@ -1,76 +1,133 @@
 /*
-use selected for picking product. Dynamic options
+use selected for picking product. #Dynamic options
 https://vuejs.org/v2/guide/forms.html
 
 
+https://vuejs.org/v2/examples/grid-component.html
+
+
+Reusable Component for
+Components list
+SR list for csr
+
 */
 
-Vue.component('blog-post', {
-    props: ['title'],
-    template: '<h4>{{ title }}</h4>'
-});
+// https://vuejs.org/v2/examples/grid-component.html
+Vue.component('table-grid', {
+    template: '#table-grid-template',
+    props: {
+        rows: Array,
+        columns: Array,
+        filterKey: String,
 
-Vue.component('product-list', {
-    props: ['name'],
-    template: '<h4>{{ name }}</h4>'
-});
+        // To enable eg. v-bind:detail-col="true"
+        selectCol: false,
+        cVerCol: false,
+        cSrCol: false,
 
-
-// https://vuejs.org/v2/guide/components.html
-Vue.component('button-counter', {
+    },
     data: function () {
+        let sortOrders = {};
+        this.columns.forEach(function (key) {
+            sortOrders[key] = 1
+        });
         return {
-            count: 0
+            sortKey: '',
+            sortOrders: sortOrders,
+
+            selected_row: {},
         }
     },
-    template: `
-<button v-on:click="count++">You clicked me {{ count }} times.</button>
-`
+    computed: {
+        filteredRows: function () {
+            let sortKey = this.sortKey;
+            let filterKey = this.filterKey && this.filterKey.toLowerCase();
+            let order = this.sortOrders[sortKey] || 1;
+            let rows = this.rows;
+            if (filterKey) {
+                rows = rows.filter(function (row) {
+                    return Object.keys(row).some(function (key) {
+                        return String(row[key]).toLowerCase().indexOf(filterKey) > -1
+                    })
+                })
+            }
+            if (sortKey) {
+                rows = rows.slice().sort(function (a, b) {
+                    a = a[sortKey];
+                    b = b[sortKey];
+                    return (a === b ? 0 : a > b ? 1 : -1) * order
+                })
+            }
+            return rows
+        }
+    },
+    filters: {
+        capitalize: function (str) {
+            return str.charAt(0).toUpperCase() + str.slice(1)
+        }
+    },
+    methods: {
+        sortBy: function (key) {
+            this.sortKey = key;
+            this.sortOrders[key] = this.sortOrders[key] * -1
+        }
+    }
 });
 
-// 1. Define route components. These can be imported from other files
-const Home = {template: `<div><h1>Software Component Store and Release Assembly Tools</h1></div>`};
+
+const Home = {template: '#home-template'};
 
 const Products = {
+    template: '#products-template',
+
     data() {
         return {
-            product_names: [],
-            product_new: null,
-            product_new_response: null,
+            products: [{}, {}],
 
-            product_selected: null,
+            product_name: null,
+            product_name_response: {},
 
-            product_edit: null,
             product_field: "name",
-            product_value: null,
-            product_edit_response: null,
+            product_value: "",
+            product_edit_response: {},
 
 
-            product_delete: null,
-            product_delete_response: null,
-
-
-            picked: null,
-            selected: null,
-
-            data1: "data1old",
+            searchQuery: '',
+            // must provide object structure template to use {{object.name}}
+            selectedRow: {name: ''},
 
         }
     },
+
+    computed: {
+        gridData: function () {
+            return this.products
+        },
+        gridColumns: function () {
+            let col = [];
+            for (const key in this.products[0]) {
+                col.push(key)
+            }
+            return col
+        },
+        product_edit: function () {
+            return this.selectedRow.name
+        }
+    },
+
     methods: {
 
         pname: function () {
             axios.get('/pname')
-                .then(response => (this.product_names = response.data))
+                .then(response => (this.products = response.data))
                 .catch(error => console.log(error));
-
         },
 
 
         pnew: function () {
-            axios.post('/pnew', {name: this.product_new})
+            axios.post('/pnew', {name: this.product_name})
                 .then(response => {
-                    this.product_new_response = response.data;
+                    this.product_name_response = response.data;
                     this.pname()
                 })
                 .catch(error => console.log(error));
@@ -78,9 +135,9 @@ const Products = {
         },
 
         pdelete: function () {
-            axios.post('/pdelete', {name: this.product_delete})
+            axios.post('/pdelete', {name: this.product_name})
                 .then(response => {
-                    this.product_delete_response = response.data;
+                    this.product_name_response = response.data;
                     this.pname()
                 }).catch(error => console.log(error));
         },
@@ -98,130 +155,80 @@ const Products = {
         },
 
 
-        func1: function () {
-
-            axios.post('/5', {
-                firstName: 'fp1firstname',
-                lastName: 'fp1lastname'
-            })
-                .then(response => (this.data1 = response.data))
-                .catch(error => console.log(error));
-            // this.data1 = "data1new"
-        }
-
-
     },
-
 
     mounted: function () {
         this.pname()
     },
 
-    template: `
-<div>
-
-<h1>Products Page</h1>
-<hr/>
-<h1> {{ product_names }} </h1>
-<product-list
-    v-for="product_name in product_names"
-    v-bind:key="product_name"
-    v-bind:name="product_name"
-></product-list>
-<hr/>
-<label>New Product Name <input v-model="product_new"> </label>
-<span>Product to create: </span>
-<p>{{ product_new }}</p>
-
-<button v-on:click="pnew">New Product Button</button>
-<span>product response is : {{ this.product_new_response }}</span>
-
-<hr/>
-<label>Delete Product <input v-model="product_delete"> </label>
-<span>Product to delete: </span>
-<p>{{ product_delete }}</p>
-
-<button v-on:click="pdelete">Delete Product Button</button>
-<span>product response is : {{ this.product_delete_response }}</span>
-
-<hr/>
-<label>Edit Product Name<input v-model="product_edit"></label>
-<span>Product to edit is: <p>{{ product_edit }}</p></span>
-<label>Field (ie. id, name) <input v-model="product_field"> </label>
-<span><p>{{ product_field }}</p></span>
-<label>Field value <input v-model="product_value"> </label>
-<span><p>{{ product_value }}</p></span>
-
-<button v-on:click="pedit">Edit Product Button</button>
-<span>product response is : {{ this.product_edit_response }}</span>
-
-<hr/>
-
-<input type="radio" id="one" value="One" v-model="picked">
-<label for="one">One</label>
-<br>
-<input type="radio" id="two" value="Two" v-model="picked">
-<label for="two">Two</label>
-<br>
-<span>Picked: {{ picked }}</span>
-
-<hr/>
-<button v-on:click="func1">Func1 Button</button>
-<span>data1 is : {{data1}}</span>
-
-</div>`
 };
 
-const Foo = {
+const SoftwareReleases = {
+    template: '#software-releases-template',
+
     data: function () {
         return {
-            message1: null,
-            message2: null,
-            posts: []
+            searchQuery: '',
+            gridColumns: ['name', 'power'],
+            gridData: [
+                {name: 'Chuck Norris', power: Infinity},
+                {name: 'Bruce Lee', power: 9000},
+                {name: 'Jackie Chan', power: 7000},
+                {name: 'Jet Li', power: 8000}
+            ],
+
+            // must provide object structure template to use {{object.name}}
+            selectedRow: {name: ''},
+
         };
     },
 
     methods: {
-        say: function () {
-            axios.get('https://jsonplaceholder.typicode.com/posts')
-                .then((response) => {
-                    this.posts = response.data
-                });
-        },
+
     },
 
     mounted: function () {
 
-        // http://127.0.0.1:5000/b, fixes origin policy
-        axios.get('/b')
-            .then(response => (this.message1 = response.data))
-            .catch(error => console.log(error));
-
-        axios.post('/8', {
-            firstName: 'fp1firstname',
-            lastName: 'fp1lastname'
-        })
-            .then(response => (this.message2 = response.data))
-            .catch(error => console.log(error));
-
-        this.say()
     },
 
-    template: `<div>
-    <span>message1: {{ message1 }}</span>
-    <hr/>
-    <span>message2: {{ message2 }}</span>
-    <hr/>
-    <blog-post
-      v-for="post in posts"
-      v-bind:key="post.id"
-      v-bind:title="post.title"
-    ></blog-post>
-</div>`
 };
 
+const SRVersion = {
+    data: function () {
+        return {
+            data1: 1,
+            data2: 2
+        };
 
-const Bar = {
+    },
+
+    methods: {
+        say: function (message) {
+            alert(message)
+        },
+
+    },
+
+    mounted: function () {
+
+        axios.get('/b')
+            .then(response => (this.data1 = response.data))
+            .catch(error => console.log(error));
+
+        axios.post('/5',
+            {
+                x: '1',
+                y: '2'
+            })
+            .then(response => (this.data2 = response.data))
+            .catch(error => console.log(error));
+
+    },
+
+    template: '#srversion-template'
+};
+
+const SRComponent = {
     data: function () {
         return {
             data1: 1,
@@ -259,8 +266,154 @@ const Bar = {
 </div>`
 };
 
+const Components = {
+    template: '#components-template',
+
+    data: function () {
+        return {
+            component_highest: [{}],
+
+            gridColumns: ['name', 'version'],
+            searchQuery: '',
+            // selectedRow: {name: '', version: ''},
+
+        };
+    },
+
+    computed: {
+        gridData: function () {
+            return this.component_highest
+        },
+    },
+
+    methods: {
+        c_high: function () {
+            axios.get('/cmax')
+                .then(response => (this.component_highest = response.data))
+                .catch(error => console.log(error));
+        },
+    },
+
+    mounted: function () {
+        this.c_high()
+    },
+
+};
+
+const ComponentVersion = {
+    template: '#component-version-template',
+
+    data: function () {
+        return {
+            component_versions: [],
+
+            gridColumns: ['name', 'version'],
+            searchQuery: '',
+
+        };
+    },
+
+    computed: {
+        gridData: function () {
+            return this.component_versions
+        },
+    },
+
+    methods: {
+        c_versions: function () {
+            axios.post('/cversion',
+                {
+                    name: this.$route.params.name,
+                })
+                .then(response => (this.component_versions = response.data))
+                .catch(error => console.log(error));
+        },
+    },
+
+    mounted: function () {
+        this.c_versions()
+    },
+
+};
+
+// Associated SR
+const ComponentSR = {
+    data: function () {
+        return {
+            srlist: null,
+        };
+    },
+
+    methods: {
+        csearchsr: function () {
+            axios.post('/csearchsr',
+                {
+                    name: this.$route.params.name,
+                    version: this.$route.params.version
+                })
+                .then(response => (this.srlist = response.data))
+                .catch(error => console.log(error));
+        },
+    },
+
+
+    mounted: function () {
+        this.csearchsr()
+    },
+
+    template: '#component-sr-template'
+};
+
+
+const Foo = {
+    template: '#foo-template',
+
+    data: function () {
+        return {
+            message1: null,
+            message2: null,
+            posts: null
+        };
+    },
+
+    methods: {},
+
+    mounted: function () {
+
+        // http://127.0.0.1:5000/b, fixes origin policy
+        axios.get('/b')
+            .then(response => (this.message1 = response.data))
+            .catch(error => console.log(error));
+
+        axios.post('/8', {
+            firstName: 'fp1firstname',
+            lastName: 'fp1lastname'
+        })
+            .then(response => (this.message2 = response.data))
+            .catch(error => console.log(error));
+
+    },
+
+};
+
+const Bar = {
+    template: '#bar-template',
+
+    data: function () {
+        return {
+            data1: 1,
+        };
+    },
+
+    methods: {},
+
+    mounted: function () {
+
+    },
+};
 
 const Page1 = {
+    template: '#page1-template',
     data: function () {
         return {
             message: 'hello vue',
@@ -269,9 +422,10 @@ const Page1 = {
                 {name: "product2", property: "property1"},
                 {name: "product3", property: "property1"},
             ],
-            component_names: [],
+            component_names: null,
             name: "app1 name",
             data1: "data1text",
+            picked: null,
         }
     },
     methods: {
@@ -303,10 +457,10 @@ const Page1 = {
                 this.info = response.data.bpi
             })
             .catch(error => {
-                console.log(error)
+                console.log(error);
                 this.errored = true
             })
-            .finally(() => this.loading = false)
+            .finally(() => this.loading = false);
 
         axios.get('/cname')
             .then(function (response) {
@@ -316,105 +470,13 @@ const Page1 = {
             .catch(function (error) {
                 console.log(error);
             });
-
-
     },
 
 
-    template: `
-<div>     
-      <section>
-        <h1>Section heading</h1>
-        <hr/>
-        <button v-on:click="post5">Post5 Button</button>
-        <span>data1 is : {{data1}}</span>
-        
-        <button v-on:click="func1">Func1 Button</button>
-        <span>data1 is : {{data1}}</span>
-
-        <hr/>
-
-        <button type="button" onclick="">Test Button 1</button>
-        <button type="button" onclick="">Test Button 2</button>
-        <button type="button" onclick="">Test Button 3</button>
-        <button type="button" onclick="">Test Button 4</button>
-        <button type="button" onclick=f5()>Test Button 5</button>
-        <button type="button" onclick=f6()>Test Button 6</button>
-        <button type="button" onclick=f7()>Test Button 7</button>
-
-        <div id="id1">1</div>
-        <div id="id2">2</div>
-        <div id="id3">3</div>
-        <div id="id4">4</div>
-        <div id="id5">5</div>
-        <div id="id6">6</div>
-
-        <br/>
-
-      </section>
-
-      <section>
-        <h1>Vue App</h1>
-        <ul>
-          <li v-for="product in products">
-            {{ product }}
-            {{ product.name }}
-            {{ product.property}}
-            {{ message }}
-          </li>
-        </ul>
-
-
-        <label>
-          <input type="text" v-model="message">
-          {{ message }}
-        </label>
-
-
-        Component changes
-        <ul>
-          <li v-for="component_name in component_names">
-            {{ component_name }}
-          </li>
-        </ul>
-        {{ component_names }}
-
-        force reload CTRL click
-
-        <h1 v-if="true">true</h1>
-        <h1 v-else>false</h1>
-
-
-      </section>
-
-      <section>
-        <h1>HTML form input</h1>
-        <form action="http://127.0.0.1:5000/6" method="post">
-          <label>
-            <input type="text" name="name1" value="v1">
-            <input type="text" name="name2" value="v2">
-            <input type="text" name="name3" value="v3">
-            <input type="submit" value="Submit">
-          </label>
-        </form>
-
-        <form onsubmit="f1()">
-          <label for="text1">text1 label</label>
-          <input type="text" id="text1">
-        </form>
-
-      </section>
-
-      <button-counter></button-counter>
-      
-      
-      <router-link v-bind:to="'/page2/para1/para2' + data1">New</router-link>
-      
-
-</div>`
 };
 
 const Page2 = {
+    template: '#page2-template',
     data: function () {
         return {
             data222: "data222text",
@@ -449,23 +511,18 @@ const Page2 = {
             .catch(error => console.log(error));
 
     },
-
-    template: `<div>
-<button v-on:click="say('hi')">Say hi</button>
-<p>data222: {{ data222 }}</p>
-<p>data1: {{ data1 }}</p>
-<p>component_name: {{ component_name }}</p>
-<div>$route.params.id = {{ $route.params.id }}</div>
-<div>$route.params.ver = {{ $route.params.ver }}</div>
-<div>id :  {{ id }}</div>
-<div>ver :  {{ ver }}</div>
-</div>`
 };
 
 
 const routes = [
     {path: '/', component: Home},
+    {path: '/c', component: Components},
+    {path: '/c/:name', component: ComponentVersion},
+    {path: '/c/:name/:version', component: ComponentSR},
     {path: '/p', component: Products},
+    {path: '/sr', component: SoftwareReleases},
+    {path: '/sr/:name', component: SRVersion},
+    {path: '/sr/:name/:version', component: SRComponent},
     {path: '/foo', component: Foo},
     {path: '/bar', component: Bar},
     {path: '/page1', component: Page1},

@@ -65,7 +65,20 @@ function fp1() {
 
 }
 
+/*
+x = {"name": "Jet Li", "power": 8000}
+
+console.log("typeof x = " + typeof x);
+console.log("x.power = " + x.power);
+console.log("x.name = " + x.name);
 
 
+let cars = [];
+for (const key in x) {
+    console.log("key = " + key);
+    cars.push(key)
+
+}
 
 
+*/
