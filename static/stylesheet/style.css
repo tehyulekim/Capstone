@@ -257,23 +257,31 @@ th.active .arrow {
 
 
 
-input {
-    font-size: 16px;
+input, select{
+    font-size: 24px;
     background-color: black;
     border: medium inset darkgray;
 
     color: white;
     text-align: center;
+
+    height: 48px;
+    width: 288px;
 }
 
 button {
     background-color: #000060;
     color: lightgray;
-    border: medium outset cornflowerblue;
-    font-size: 16px;
-    padding: 14px;
+    border-width: medium;
+    border-color: cornflowerblue;
+    font-size: 18px;
+    padding: 12px;
     border-radius: 30px;
+
+    cursor: pointer;
+
 }
+
 
 
 input[type=radio] {
