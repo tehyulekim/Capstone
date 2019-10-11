@@ -82,3 +82,31 @@ for (const key in x) {
 
 
 */
+let products = [
+    {
+        name: "p2"
+    },
+    {
+        name: "p3"
+    },
+    {
+        name: "p4"
+    },
+    {
+        name: "p1"
+    },
+    {
+        name: "p5"
+    },
+    {
+        name: "p6"
+    }
+]
+
+let col = []
+
+for (let i = 0; i < products.length; i++) {
+    console.log("products[i].name = " + products[i].name);
+    col.push(products[i].name)
+}
+console.log("col = " + col);

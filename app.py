@@ -22,18 +22,17 @@ db.drop_all()
 
 class Product(db.Model):
     name = db.Column(db.String(255), primary_key=True)
-    software_releases = db.relationship("SoftwareRelease", back_populates="product",
-                                        cascade="all, delete, delete-orphan")
+    software_releases = db.relationship("SoftwareRelease", back_populates="product", cascade="all, delete-orphan")
 
 
 class SoftwareRelease(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(255), db.ForeignKey('product.name'))
+    product_name = db.Column(db.String(255), db.ForeignKey('product.name', onupdate="CASCADE"), nullable=False)
     version_number = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(255), default='In Development')
     __table_args__ = (db.UniqueConstraint('product_name', 'version_number'),)
     product = db.relationship("Product", back_populates="software_releases")
-    components = db.relationship("Association", back_populates="software_release", cascade="all, delete, delete-orphan")
+    components = db.relationship("Association", back_populates="software_release", cascade="all, delete-orphan")
 
 
 class Component(db.Model):
@@ -41,7 +40,7 @@ class Component(db.Model):
     name = db.Column(db.String(255), nullable=False)
     version = db.Column(db.String(255), nullable=False)
     __table_args__ = (db.UniqueConstraint('name', 'version'),)
-    software_releases = db.relationship("Association", back_populates="component", cascade="all, delete, delete-orphan")
+    software_releases = db.relationship("Association", back_populates="component", cascade="all, delete-orphan")
 
 
 # Association object for SoftwareRelease and Component. Includes extra column: Destination path
@@ -88,6 +87,9 @@ db.session.add(c2)
 db.session.commit()
 
 
+s1 =  SoftwareRelease.query.filter_by(product_name="p1", version_number="1").first()
+
+
 a1 = Association.query.filter_by(id=1).first()
 a2 = Association.query.filter_by(id=2).first()
 a3 = Association.query.filter_by(id=3).first()
@@ -110,6 +112,13 @@ s2.components.append(a3)
 db.session.commit()
 
 
+a1.software_release.product_name
+
+
+
+
+
+
 a12 = Association(id=12, component=c1)
 s1.components.append(a12)
 
@@ -121,6 +130,14 @@ s2.components.append(a4)
 a2 = Association.query.filter_by(software_release_id=2, component_id=2).first()
 db.session.delete(a2)
 db.session.commit()
+
+
+a_new = Association(component=c1)
+
+
+
+
+
 
 
 
@@ -137,6 +154,17 @@ p.children.append(a)
 for assoc in p.children:
     print(assoc.extra_data)
     print(assoc.child)
+
+
+a = Association(component=c3, destination="./dest3")
+
+
+aquery = Association.query.all()
+for a in aquery:
+    print(a.software_release.product_name + a.software_release.version_number + a.component.name + a.component.version)
+    
+
+
 
 
 
@@ -178,7 +206,7 @@ def add():
     logging.debug("name = " + str(name))
     logging.debug("version = " + str(version))
 
-    # test with POSTMAN {"name": "c1", "version": "1"}
+    # test with Postman {"name": "c1", "version": "1"}
     # query component
     query_component = db.session.query(Component).filter_by(name=name, version=version).first()
 
@@ -244,7 +272,7 @@ def bring():
 
 # http://127.0.0.1:5000/r
 @app.route('/r', methods=['POST', 'GET'])
-def recipe():
+def requestreturn():
     if request.method == 'POST':
         return jsonify(request.data)
 
@@ -280,7 +308,8 @@ def view():
 
     alist = []
     for a in aquery:
-        alist.append(a.software_release.product_name + "_" + a.component.name)
+        alist.append(
+            a.software_release.product_name + "v" + a.software_release.version_number + "_" + a.component.name + "v" + a.component.version)
 
     viewall = {
         "Product": str(plist),
@@ -353,6 +382,7 @@ def cversion():
     return jsonify(cversion_sorted)
 
 
+# rename to c_sr
 # Get a list of software releases associated with a component
 # http://127.0.0.1:5000/csearchsr
 @app.route('/csearchsr', methods=['POST'])
@@ -363,6 +393,7 @@ def csearchsr():
     """
     req_data = request.get_json()  # <class 'dict'>
     logging.debug("req_data = " + str(req_data))
+
     name = req_data['name']
     version = req_data['version']
 
@@ -377,14 +408,14 @@ def csearchsr():
     return jsonify(srlist)
 
 
-# http://127.0.0.1:5000/pname
-@app.route('/pname', methods=['GET'])
-def pname():
+# http://127.0.0.1:5000/p
+@app.route('/p', methods=['GET'])
+def p():
     pquery = Product.query.all()
 
     plist = []
     for p in pquery:
-        plist.append({'name': p.name})
+        plist.append({"name": p.name})
 
     return jsonify(plist)
 
@@ -478,6 +509,27 @@ def sr():
     return jsonify(srlist)
 
 
+# {"product_name": "p1", "version_number": "1"}
+# sr c list
+# http://127.0.0.1:5000/sr_c
+@app.route('/sr_c', methods=['POST'])
+def sr_c():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+
+    sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+
+    clist = []
+    for a in sr.components:
+        clist.append({'name': a.component.name,
+                      'version': a.component.version})
+
+    return jsonify(clist)
+
+
 # http://127.0.0.1:5000/srnew
 @app.route('/srnew', methods=['POST'])
 def srnew():
@@ -554,23 +606,225 @@ def sredit():
         return jsonify(return_code)
 
 
-# /sr_add_c
-# sr name ver, c name ver, URL =>
+# http://127.0.0.1:5000/sr_add_c
+@app.route('/sr_add_c', methods=['POST'])
+def sr_add_c():
+    r"""
+
+    Postman test
+
+{
+    "product_name": "p3",
+    "version_number": "1",
+    "name": "c2",
+    "version": "1",
+    "destination": "./dest2"
+}
+
+    :return:
+    """
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+    name = req_data['name']
+    version = req_data['version']
+    destination = req_data['destination']
+
+    return_code = {"name": "Error"}
+
+    try:
+        # create new association
+        c = Component.query.filter_by(name=name, version=version).first()
+        sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+
+        a = Association(destination=destination)
+        a.component = c
+        sr.components.append(a)
+
+        db.session.commit()
+        return_code['name'] = "Success"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_code)
 
 
-# /sr_remove_c
+# http://127.0.0.1:5000/sr_add_clist
+@app.route('/sr_add_clist', methods=['POST'])
+def sr_add_clist():
+    r"""
+
+    Postman test
+
+{
+    "product_name": "p3",
+    "version_number": "1",
+    "components": [
+    {
+        "name": "c2",
+        "version": "1",
+        "destination": "./dest2"
+    }
+}
+
+    :return:
+    """
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+    components = req_data['version_number']
+
+    # name = req_data['name']
+    # version = req_data['version']
+    # destination = req_data['destination']
+
+    return_code = {"name": "Error"}
+
+    try:
+        # create new association
+        # c = Component.query.filter_by(name=name, version=version).first()
+        # sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+        #
+        # a = Association(destination=destination)
+        # a.component = c
+        # sr.components.append(a)
+
+        db.session.commit()
+        return_code['name'] = "Success"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_code)
+
+
 # sr name ver, c name ver URL ( selected from clist)
+# http://127.0.0.1:5000/sr_remove_c
+@app.route('/sr_remove_c', methods=['POST'])
+def sr_remove_c():
+    r"""
+
+    Postman test
+
+{
+    "product_name": "p3",
+    "version_number": "1",
+    "name": "c2",
+    "version": "1",
+    "destination": "./dest2"
+}
+
+    :return:
+    """
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+    name = req_data['name']
+    version = req_data['version']
+    destination = req_data['destination']
+
+    return_code = {"name": "Error"}
+
+    try:
+        # create new association
+        c_id = Component.query.filter_by(name=name, version=version).first().id
+        sr_id = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first().id
+        a = Association.query.filter_by(software_release_id="4", component_id=c_id, destination="./dest2").first()
+
+        db.session.delete(a)
+
+        db.session.commit()
+        return_code['name'] = "Success"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_code)
 
 
-# /sr_copy
+# makes sr deep copy with different version. Copy and paste description from requirements
 # sr name ver, sr ver => in dev
+# http://127.0.0.1:5000/sr_copy
+@app.route('/sr_copy', methods=['POST'])
+def sr_copy():
+    r"""
+
+    Postman test
+
+{
+    "product_name": "p3",
+    "version_number": "1",
+    "version_number_new": "2",
+}
+
+    :return:
+    """
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+    version_number_new = req_data['version_number_new']
+
+    return_code = {"name": "Error"}
+
+    try:
+        # create new association
+        sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+
+        sr_new = SoftwareRelease(product_name=product_name, version_number=version_number_new)
+        db.session.add(sr_new)
+
+        # extract components to list, and add components based on list
+        for a in sr.components:
+            a_new = Association(destination=a.destination)
+            a_new.component = a.component
+            sr_new.components.append(a_new)
+
+        db.session.commit()
+        return_code['name'] = "Success"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return jsonify(return_code)
 
 
-
-# /recipe
 # complete recipe list for cli
 # take sr name ver, return full json recipe
+# http://127.0.0.1:5000/recipe
+@app.route('/recipe', methods=['POST'])
+def recipe():
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
 
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+
+    sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+
+    clist = []
+    for a in sr.components:
+        clist.append({'name': a.component.name,
+                      'version': a.component.version})
+
+    recipe = {'product_name': sr.product_name,
+              'version_number': sr.version_number,
+              'status': sr.status,
+              'components': clist}
+
+    return jsonify(recipe)
 
 
 @app.route('/5', methods=['POST', 'GET'])
@@ -580,8 +834,6 @@ def f5():
         logging.debug("request.get_json() = " + str(request.get_json()))
         return jsonify(request.get_json())
     return "f5"
-
-
 
 
 if __name__ == '__main__':

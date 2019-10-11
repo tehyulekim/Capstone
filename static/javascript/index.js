@@ -117,8 +117,8 @@ const Products = {
 
     methods: {
 
-        pname: function () {
-            axios.get('/pname')
+        p: function () {
+            axios.get('/p')
                 .then(response => (this.products = response.data))
                 .catch(error => console.log(error));
         },
@@ -158,7 +158,7 @@ const Products = {
     },
 
     mounted: function () {
-        this.pname()
+        this.p()
     },
 
 };
@@ -166,28 +166,130 @@ const Products = {
 const SoftwareReleases = {
     template: '#software-releases-template',
 
-    data: function () {
+    data() {
         return {
-            searchQuery: '',
-            gridColumns: ['name', 'power'],
-            gridData: [
-                {name: 'Chuck Norris', power: Infinity},
-                {name: 'Bruce Lee', power: 9000},
-                {name: 'Jackie Chan', power: 7000},
-                {name: 'Jet Li', power: 8000}
-            ],
+            software_releases: [{}, {}],
+            products: [],
 
-            // must provide object structure template to use {{object.name}}
+            product_name: "", // selects one from product_names list
+            version_number: "",
+            server_response: {},
+
+            sr_field: "",
+            sr_value: "",
+            sr_selected_response: {},
+
+            version_number_new: "",
+            sr_copy_response: {},
+
+            gridColumns: ["product_name", "version_number", "status"],
+
+            searchQuery: '',
             selectedRow: {name: ''},
 
-        };
+        }
+    },
+
+    computed: {
+        gridData: function () {
+            return this.software_releases
+        },
+        sr_selected: function () {
+            // return {
+            //     product_name: this.selectedRow.product_name,
+            //     version_number: this.selectedRow.version_number,
+            // }
+            if (this.selectedRow.product_name) {
+                return (this.selectedRow.product_name + " v" + this.selectedRow.version_number)
+            }
+        },
+
+        product_names: function () {
+            let plist = []
+            for (let i = 0; i < this.products.length; i++) {
+                plist.push(this.products[i].name)
+            }
+            return plist
+        }
+
+
     },
 
     methods: {
+        p: function () {
+            axios.get('/p')
+                .then(response => (this.products = response.data))
+                .catch(error => console.log(error));
+        },
+
+        sr: function () {
+            axios.get('/sr')
+                .then(response => (this.software_releases = response.data))
+                .catch(error => console.log(error));
+        },
+
+
+        srnew: function () {
+            axios.post('/srnew', {
+                product_name: this.product_name,
+                version_number: this.version_number
+            })
+                .then(response => {
+                    this.server_response = response.data;
+                    this.sr();
+                })
+                .catch(error => console.log(error));
+
+        },
+
+        srdelete: function () {
+            axios.post('/srdelete', {
+                product_name: this.product_name,
+                version_number: this.version_number
+            })
+                .then(response => {
+                    this.server_response = response.data;
+                    this.sr()
+                }).catch(error => console.log(error));
+        },
+
+        sredit: function () {
+            if (this.selectedRow.status === "Released") {
+                this.sr_selected_response = {name: 'Cannot edit "Released"'};
+            } else {
+                axios.post('/sredit', {
+                    product_name: this.selectedRow.product_name,
+                    version_number: this.selectedRow.version_number,
+                    field: this.sr_field,
+                    value: this.sr_value
+                })
+                    .then(response => {
+                        this.sr_selected_response = response.data;
+                        this.sr()
+                    }).catch(error => console.log(error));
+            }
+        },
+
+        sr_copy: function () {
+            axios.post('/sr_copy', {
+                product_name: this.selectedRow.product_name,
+                version_number: this.selectedRow.version_number,
+                version_number_new: this.version_number_new
+            })
+                .then(response => {
+                    this.sr_copy_response = response.data;
+                    this.sr();
+                })
+                .catch(error => console.log(error));
+
+        }
+
 
     },
 
     mounted: function () {
+        this.sr();
+        this.p()
 
     },
 
