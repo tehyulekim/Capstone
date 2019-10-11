@@ -132,7 +132,6 @@
     <span>{{ this.product_name_response.name }}</span>
 
     <hr/>
-    <h2>Selected: [ {{product_edit}} ]</h2>
     <label>
       <select v-model="product_field">
         <option v-for="option in gridColumns" v-bind:value="option">
@@ -142,11 +141,11 @@
     </label>
     <label><input v-model="product_value" placeholder="New Value"> </label>
 
-    <button v-on:click="pedit">Edit Product</button>
+    <button v-on:click="pedit">Edit Selected Product</button>
     <span>{{ product_edit_response.name }}</span>
-    <hr/>
-    <br/>
 
+    <hr/>
+    <h2>Selected: {{product_edit}}</h2>
     <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
     <table-grid
         :rows="gridData"
@@ -160,30 +159,37 @@
 </script>
 <script type="text/x-template" id="software-releases-template">
   <div>
+    <h1>Software Releases</h1>
     <hr/>
-    <h1>Products</h1>
-    <hr/>
-    <label><input v-model="product_name" placeholder="Product Name"></label>
-    <button v-on:click="pnew">Create Product</button>
-    <button v-on:click="pdelete">Delete Product</button>
-    <span>{{ this.product_name_response.name }}</span>
-
-    <hr/>
-    <h2>Selected: [ {{product_edit}} ]</h2>
+    <!--    <label><input v-model="product_name" placeholder="Product Name"></label>-->
     <label>
-      <select v-model="product_field">
-        <option v-for="option in gridColumns" v-bind:value="option">
-          {{ option }}
-        </option>
+      <select v-model="product_name">
+        <option value="" disabled selected>Product Name</option>
+        <option v-for="option in product_names" v-bind:value="option"> {{ option }}</option>
       </select>
     </label>
-    <label><input v-model="product_value" placeholder="New Value"> </label>
+    <label><input v-model="version_number" placeholder="Version Number"></label>
+    <button v-on:click="srnew">Create Software Release</button>
+    <button v-on:click="srdelete">Delete Software Release</button>
+    <span>{{ this.server_response.name }}</span>
 
-    <button v-on:click="pedit">Edit Product</button>
-    <span>{{ product_edit_response.name }}</span>
     <hr/>
-    <br/>
+    <label>
+      <select v-model="sr_field">
+        <option value="" disabled selected>Attribute Field</option>
+        <option v-for="option in gridColumns" v-bind:value="option"> {{ option }}</option>
+      </select>
+    </label>
+    <label><input v-model="sr_value" placeholder="New Value"> </label>
 
+    <button v-on:click="sredit">Edit Selected Software Release</button>
+    <hr/>
+    <label><input v-model="version_number_new" placeholder="New Version Number"></label>
+    <button v-on:click="sr_copy">Copy Selected Software Release</button>
+    <span>{{ sr_copy_response.name }}</span>
+    <hr/>
+
+    <h2>Selected: {{sr_selected}}</h2>
     <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
     <table-grid
         :rows="gridData"
@@ -192,19 +198,6 @@
         :select-col="true"
         v-model="selectedRow"
     ></table-grid>
-
-    <hr/>
-    <form id="search">
-      Search <input name="query" v-model="searchQuery">
-    </form>
-    <table-grid
-        :rows="gridData"
-        :columns="gridColumns"
-        :filter-key="searchQuery"
-        v-model="selectedRow"
-    ></table-grid>
-    <h4> received: {{ selectedRow }}</h4>
-    <h4> received: {{ selectedRow.name }}</h4>
   </div>
 </script>
 <script type="text/x-template" id="srversion-template"></script>
