@@ -195,9 +195,9 @@ def index():
 
 
 # add component
-# http://127.0.0.1:5000/add
-@app.route('/add', methods=['POST'])
-def add():
+# http://127.0.0.1:5000/cli_add
+@app.route('/cli_add', methods=['POST'])
+def cli_add():
     # component = json.loads(request.data)  # {'name': name, 'version': version} # <class 'dict'>
 
     component = request.get_json()  # <class 'dict'>
@@ -226,10 +226,10 @@ def add():
     return "201 Created. Component is added"
 
 
-# check component's existence
-# http://127.0.0.1:5000/check
-@app.route('/check', methods=['POST', 'GET'])
-def check():
+# check component's existence in database
+# http://127.0.0.1:5000/cli_exist
+@app.route('/cli_exist', methods=['POST', 'GET'])
+def cli_exist():
     component = request.get_json()  # <class 'dict'>
     name = component['name']
     version = component['version']
@@ -322,7 +322,7 @@ def view():
     return jsonify(viewall)
 
 
-# Components all
+# returns list of all components
 # http://127.0.0.1:5000/c
 @app.route('/c', methods=['GET'])
 def c():
@@ -826,6 +826,14 @@ def sr_remove_c():
 # http://127.0.0.1:5000/recipe
 @app.route('/recipe', methods=['POST'])
 def recipe():
+    """
+    {
+    "product_name": "p2",
+    "version_number": "3"
+    }
+
+    :return: recipe json
+    """
     req_data = request.get_json()
     logging.debug("req_data = " + str(req_data))
 
