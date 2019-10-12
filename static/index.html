@@ -92,11 +92,12 @@
       </th>
       <th v-if="cVerCol">Versions</th>
       <th v-if="cSrCol">Software Releases</th>
+      <th v-if="cCol">Components</th>
       <th v-if="selectCol">Select</th>
       <!--      {{selected_row}}-->
     </tr>
     </thead>
-    <tbody>
+    <tbody v-if="!highlighted">
     <tr v-for="entry in filteredRows">
       <td v-for="key in columns">
         {{entry[key]}}
@@ -106,6 +107,22 @@
       </td>
       <td v-if="cSrCol">
         <router-link v-bind:to="'/c/' + $route.params.name + '/' + entry.version">Software Releases</router-link>
+      </td>
+      <td v-if="cCol">
+        <router-link v-bind:to="'/sr/' + entry.product_name + '/' + entry.version_number">Components</router-link>
+      </td>
+      <td v-if="selectCol"><label> <input type="radio"
+                                          v-bind:value="entry"
+                                          v-model="selected_row"
+                                          v-on:change="$emit('input', selected_row)"
+      > </label></td>
+    </tr>
+    </tbody>
+    <tbody v-if="highlighted">
+    <tr v-for="entry in filteredRows"
+        v-bind:style="((entry['newest_version']==='This') ? {}: styleObject)">
+      <td v-for="key in columns">
+        {{entry[key]}}
       </td>
       <td v-if="selectCol"><label> <input type="radio"
                                           v-bind:value="entry"
@@ -173,6 +190,7 @@
     <button v-on:click="srdelete">Delete Software Release</button>
     <span>{{ this.server_response.name }}</span>
 
+
     <hr/>
     <label>
       <select v-model="sr_field">
@@ -181,8 +199,10 @@
       </select>
     </label>
     <label><input v-model="sr_value" placeholder="New Value"> </label>
-
     <button v-on:click="sredit">Edit Selected Software Release</button>
+    <span>{{ this.sr_selected_response.name }}</span>
+
+
     <hr/>
     <label><input v-model="version_number_new" placeholder="New Version Number"></label>
     <button v-on:click="sr_copy">Copy Selected Software Release</button>
@@ -195,17 +215,58 @@
         :rows="gridData"
         :columns="gridColumns"
         :filter-key="searchQuery"
+        :c-col="true"
         :select-col="true"
         v-model="selectedRow"
     ></table-grid>
   </div>
 </script>
-<script type="text/x-template" id="srversion-template"></script>
+<script type="text/x-template" id="sr-components-template">
+  <div>
+    <h1>Software Release's Components</h1>
+    <h2>Product Name: {{ $route.params.product_name }}</h2>
+    <h2>Version Number: {{ $route.params.version_number }}</h2>
+
+    <hr/>
+    <button v-on:click="sr_remove_c">Remove Selected Component from SR</button>
+    <span>{{ delete_response.name }}</span>
+
+    <h2>Selected: {{sr_selected}}</h2>
+    <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
+    <table-grid
+        :rows="sr_components"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+        :highlighted="true"
+        :select-col="true"
+        v-model="selectedRow"
+    ></table-grid>
+
+    <hr/>
+    <hr/>
+
+    <h2>Components to Add</h2>
+    <label><input v-model="destination" placeholder="Destination"></label>
+    <button v-on:click="sr_add_c">Add Selected Component to SR</button>
+    <span>{{ add_response.name }}</span>
+
+
+    <h2>Selected: {{c_selected}}</h2>
+    <label><input name="query" v-model="searchQuery2" placeholder="Search Filter"> </label>
+    <table-grid
+        :rows="components_all"
+        :columns="gridColumns2"
+        :filter-key="searchQuery2"
+        :select-col="true"
+        v-model="selectedRow2"
+    ></table-grid>
+  </div>
+</script>
 
 <script type="text/x-template" id="components-template">
   <div>
     <h1>Components</h1>
-    <h3>Component and Newest Version</h3>
+    <h2>Newest Version</h2>
     <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
     <table-grid
         :rows="gridData"
@@ -224,7 +285,7 @@
 <script type="text/x-template" id="component-version-template">
   <div>
     <h1>Component Versions</h1>
-    <h3>Component Name: {{ $route.params.name }}</h3>
+    <h2>Name: {{ $route.params.name }}</h2>
     <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
     <table-grid
         :rows="gridData"
@@ -243,9 +304,9 @@
 </script>
 <script type="text/x-template" id="component-sr-template">
   <div>
-    <h1>Component Versions</h1>
-    <h3>Component Name: {{ $route.params.name }}</h3>
-    <h3>Component Version: {{ $route.params.version }}</h3>
+    <h1>Component associated Software Releases</h1>
+    <h3>Name: {{ $route.params.name }}</h3>
+    <h3>Version: {{ $route.params.version }}</h3>
 
     <!-- sr list from sr -->
     <table-grid
