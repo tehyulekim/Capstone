@@ -81,7 +81,13 @@ for (const key in x) {
 }
 
 
-*/
+
+
+
+
+
+
+
 let products = [
     {
         name: "p2"
@@ -110,3 +116,9 @@ for (let i = 0; i < products.length; i++) {
     col.push(products[i].name)
 }
 console.log("col = " + col);
+
+
+
+
+
+*/

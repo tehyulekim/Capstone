@@ -24,7 +24,8 @@ Vue.component('table-grid', {
         selectCol: false,
         cVerCol: false,
         cSrCol: false,
-
+        cCol: false,
+        highlighted: false, // for sr_c
     },
     data: function () {
         let sortOrders = {};
@@ -36,6 +37,10 @@ Vue.component('table-grid', {
             sortOrders: sortOrders,
 
             selected_row: {},
+            styleObject: {
+                backgroundColor: '#440'
+
+            },
         }
     },
     computed: {
@@ -168,7 +173,7 @@ const SoftwareReleases = {
 
     data() {
         return {
-            software_releases: [{}, {}],
+            software_releases: [{}],
             products: [],
 
             product_name: "", // selects one from product_names list
@@ -284,7 +289,6 @@ const SoftwareReleases = {
 
         }
 
-
     },
 
     mounted: function () {
@@ -295,77 +299,123 @@ const SoftwareReleases = {
 
 };
 
-const SRVersion = {
-    data: function () {
-        return {
-            data1: 1,
-            data2: 2
-        };
+const SRComponents = {
+    template: '#sr-components-template',
 
+    data() {
+        return {
+
+            // v-bind:style="(styleCondition ? styleObject: {})"
+            sr_components: [{}],
+            gridColumns: ["name", "version", "destination", "newest_version"],
+            searchQuery: '',
+            selectedRow: {name: ''},
+
+            // delete
+            delete_response: {},
+
+
+            // table 2
+            components_all: [{}],
+            gridColumns2: ["name", "version"],
+            searchQuery2: '',
+            selectedRow2: {name: ''},
+
+            // add
+            destination: ".",
+            add_response: {},
+
+
+            // highlight. Compare with sr components
+            cmax: [{}],
+
+            styleCondition: false,
+
+        }
+    },
+
+    computed: {
+        sr_selected: function () {
+            if (this.selectedRow.name) {
+                return (this.selectedRow.name + " v" + this.selectedRow.version + " " + this.selectedRow.destination)
+            }
+        },
+
+        c_selected: function () {
+            if (this.selectedRow2.name) {
+                return (this.selectedRow2.name + " v" + this.selectedRow2.version)
+            }
+        },
     },
 
     methods: {
-        say: function (message) {
-            alert(message)
+        // previously /sr_c
+        sr_c: function () {
+            axios.post('/sr_c_highlight', {
+                product_name: this.$route.params.product_name,
+                version_number: this.$route.params.version_number
+            })
+                .then(response => {
+                    this.sr_components = response.data;
+                })
+                .catch(error => console.log(error));
+        },
+
+        c: function () {
+            axios.get('/c')
+                .then(response => (this.components_all = response.data))
+                .catch(error => console.log(error));
+        },
+
+
+        sr_add_c: function () {
+            this.add_response = {};
+            axios.post('/sr_add_c', {
+                product_name: this.$route.params.product_name,
+                version_number: this.$route.params.version_number,
+                name: this.selectedRow2.name,
+                version: this.selectedRow2.version,
+                destination: this.destination
+            })
+                .then(response => {
+                    this.add_response = response.data;
+                    this.sr_c();
+                })
+                .catch(error => console.log(error));
+
+        },
+
+        sr_remove_c: function () {
+            this.delete_response = {};
+            axios.post('/sr_remove_c', {
+                product_name: this.$route.params.product_name,
+                version_number: this.$route.params.version_number,
+                name: this.selectedRow.name,
+                version: this.selectedRow.version,
+                destination: this.selectedRow.destination
+            })
+                .then(response => {
+                    this.delete_response = response.data;
+                    this.sr_c();
+                })
+                .catch(error => console.log(error));
+
+        },
+
+        cmax: function () {
+            axios.get('/cmax')
+                .then(response => (this.cmax = response.data))
+                .catch(error => console.log(error));
         },
 
     },
 
     mounted: function () {
-
-        axios.get('/b')
-            .then(response => (this.data1 = response.data))
-            .catch(error => console.log(error));
-
-        axios.post('/5',
-            {
-                x: '1',
-                y: '2'
-            })
-            .then(response => (this.data2 = response.data))
-            .catch(error => console.log(error));
-
+        this.sr_c();
+        this.c();
+        this.cmax()
     },
 
-    template: '#srversion-template'
-};
-
-const SRComponent = {
-    data: function () {
-        return {
-            data1: 1,
-            data2: 2
-        };
-
-    },
-
-    methods: {
-        say: function (message) {
-            alert(message)
-        },
-
-    },
-
-
-    mounted: function () {
-
-        axios.get('/b')
-            .then(response => (this.data1 = response.data))
-            .catch(error => console.log(error));
-
-        axios.post('/5',
-            {
-                x: '1',
-                y: '2'
-            })
-            .then(response => (this.data2 = response.data))
-            .catch(error => console.log(error));
-
-    },
-
-    template: `<div>
-  <button v-on:click="say('hi')">Say hi</button>
-</div>`
 };
 
 const Components = {
@@ -438,7 +488,6 @@ const ComponentVersion = {
 
 };
 
-// Associated SR
 const ComponentSR = {
     data: function () {
         return {
@@ -623,8 +672,7 @@ const routes = [
     {path: '/c/:name/:version', component: ComponentSR},
     {path: '/p', component: Products},
     {path: '/sr', component: SoftwareReleases},
-    {path: '/sr/:name', component: SRVersion},
-    {path: '/sr/:name/:version', component: SRComponent},
+    {path: '/sr/:product_name/:version_number', component: SRComponents},
     {path: '/foo', component: Foo},
     {path: '/bar', component: Bar},
     {path: '/page1', component: Page1},

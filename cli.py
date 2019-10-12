@@ -33,8 +33,9 @@ def cu(name, version, *files):
     """
     $ python cli.py cu <name> <version> <*files>
 
-    Example: will create z--v1.zip containing folder1 and README.md
-    $ python cli.py cu z 1 folder1 README.md
+    Example:
+        $ python cli.py cu z 1 folder1 README.md
+    will create z--v1.zip containing folder1 and README.md
 
 
     :param name:
@@ -43,7 +44,7 @@ def cu(name, version, *files):
     :return: True when success, False when failure
     """
     name_zip = name + "--v" + str(version) + ".zip"
-    logging.debug("name_zip = " + str(name_zip))  # name--v1.zip
+    logging.debug("name_zip = " + str(name_zip))  # name--v1.2.3.4.zip
 
     # check component's existence in database
     if component_exist(name, version):
@@ -51,6 +52,9 @@ def cu(name, version, *files):
         return False
 
     try:
+
+        # must create folder path for zip file to go
+
         # Compress
         compress(name_zip, *files)
         # list_zip(name_zip) # prints list of files inside zip. Comment to turn off
@@ -69,8 +73,9 @@ def cu(name, version, *files):
 
     finally:
         # delete zip file
-        if Path(name_zip).exists():
-            Path(name_zip).unlink()
+        # if Path(name_zip).exists():
+        #     Path(name_zip).unlink()
+        pass
 
     return True
 
@@ -84,12 +89,14 @@ def rde(product_name, version_number, output_folder=DOWNLOAD_PATH):
     And downloads the components in the recipe list and extracts in folder specified by de() function
     $ python cli.py rde product1 1.2.3.4
 
+    :param output_folder:
     :param product_name:
     :param version_number:
     :return:
     """
     recipe = get_recipe(product_name, version_number)
 
+    # todo destination url
     for component in recipe['component_list']:
         print(component)
         de(component['name'], component['version'], output_folder.joinpath(Path(component['name']).parent))
@@ -165,8 +172,13 @@ def compress(zip_name, *files):
             add_to_zip(zf, path, zippath)
 
 
-# Extract zipfile into target directory.
+# Extract zipfile into target directory. Automatically creates target directory if not exist.
 def extract(src, target_dir):
+    """
+    :param src:
+    :param target_dir:
+    :return:
+    """
     with ZipFile(src, 'r') as zf:
         zf.extractall(target_dir)
 
@@ -263,12 +275,12 @@ def component_version(name):
     return response.text
 
 
-# check if component exist
+# check if component exist in database
 def component_exist(name, version):
     component = {'name': str(name),
                  'version': str(version)}
 
-    url = SERVER_URL + '/check'
+    url = SERVER_URL + '/cli_exist'
     response = requests.post(url, json=component)
     logging.debug("response.text = " + str(response.text))
 
@@ -283,7 +295,7 @@ def add_component(name, version: str):
     component = {'name': str(name),
                  'version': str(version)}
 
-    url = SERVER_URL + '/add'
+    url = SERVER_URL + '/cli_add'
     response = requests.post(url, json=component)
 
     if "409" in response.text:
