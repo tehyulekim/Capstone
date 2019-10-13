@@ -3,7 +3,7 @@ Must configure constants:
 
 BUCKET
 SERVER_URL
-DOWNLOAD_PATH
+OUTPUT_FOLDER
 
 """
 
@@ -16,16 +16,15 @@ from botocore.exceptions import ClientError
 from zipfile import ZipFile
 from pathlib import Path
 
-logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
+logging.basicConfig(level=logging.INFO)  # .DEBUG .INFO .ERROR
 
-# BUCKET = 'capstones3bucket'
-BUCKET = 'capstones3bucket'
+# BUCKET = 'capstonebuckets3'
+BUCKET = 'capstonebuckets3'
 
 # SERVER_URL = 'https://capstoneherokuapp.herokuapp.com/'
 SERVER_URL = 'http://127.0.0.1:5000'
 
-# DOWNLOAD_PATH = Path(r"./download")
-DOWNLOAD_PATH = Path(r"./download")
+OUTPUT_FOLDER = Path(r"./download")
 
 
 # component compress and upload
@@ -50,26 +49,27 @@ def cu(name, version, *files):
     :return: True when success, False when failure
     """
 
-    name_path = Path(name)  # converts name string to Path.  1/2/3/name  =>  1\2\3\name
-    name_parent = name_path.parent  # parent directory    1\2\3
-    name_name = name_path.name  # file name without parent.  name
-
-    name_zip = name_name + "--v" + str(version) + ".zip"  # name--v1.2.3.4.zip
-    logging.debug("name_zip = " + str(name_zip))
-
-    name_path_zip = name_parent.joinpath(name_zip).as_posix()  # 1/2/3/name--v1.2.3.4.zip
-
     # check component's existence in database
     if component_exist(name, version):
         print("409 Component already exists")
         return False
 
+    name_path = Path(name)  # converts name string to Path.  1/2/3/name  =>  1\2\3\name
+    name_parent = name_path.parent  # parent directory    1\2\3
+    name_name = name_path.name  # file name without parent.  name
+    name_zip = name_name + "--v" + str(version) + ".zip"  # name--v1.2.3.4.zip
+    logging.debug("name_zip = " + str(name_zip))
+    name_path_zip = name_parent.joinpath(name_zip).as_posix()  # 1/2/3/name--v1.2.3.4.zip
+
+    # wildcard (glob) to plain names
+    file_list = []
+    for file in files:
+        for file_plain in list(Path().glob(file)):
+            file_list.append(file_plain.as_posix())
+
     try:
-
-        # must create folder path for zip file to go
-
         # Compress
-        compress(name_zip, *files)
+        compress(name_zip, *file_list)
         # list_zip(name_zip) # prints list of files inside zip. Comment to turn off
         # To do: take file list or wild cards, must extract file list, and wild card list, then pass to compress()
 
@@ -78,7 +78,7 @@ def cu(name, version, *files):
         logging.info(str(name_path_zip) + " is compressed and uploaded to: " + BUCKET)
 
         # post metadata
-        add_component(name, version)
+        add_c(name, version)
 
     except Exception as e:
         logging.error(e)
@@ -102,7 +102,6 @@ def rde(product_name, version_number=""):
     And downloads the components in the recipe list and extracts in folder specified by de() function
     $ python cli.py rde product1 1.2.3.4
 
-    :param output_folder:
     :param product_name:
     :param version_number:
     :return:
@@ -110,8 +109,8 @@ def rde(product_name, version_number=""):
     recipe = get_recipe(str(product_name), str(version_number))
     logging.debug("recipe = " + str(recipe))
 
-    # check if output folder exist and is empty
-
+    if OUTPUT_FOLDER.exists() and len(list(OUTPUT_FOLDER.iterdir())) > 0:
+        return "Output folder is not empty"
 
     if recipe['code'] == '200':
         logging.info("received recipe, assembling")
@@ -137,7 +136,7 @@ def de(name, version, destination='.'):
 
     $ python cli.py de product/c0 1 dest1
     downloads product/c0--v1.zip to ./c0--v1.zip
-    extracts to DOWNLOAD_PATH/product/
+    extracts to OUTPUT_FOLDER/product/
     deletes c0--v1.zip local file
 
 
@@ -157,7 +156,7 @@ def de(name, version, destination='.'):
     name_path_zip = name_parent.joinpath(name_zip).as_posix()  # 1/2/3/name--v1.2.3.4.zip
 
     # download_folder/name_path.parent/destination
-    extract_path = DOWNLOAD_PATH.joinpath(name_parent).joinpath(destination)
+    extract_path = OUTPUT_FOLDER.joinpath(name_parent).joinpath(destination)
 
     try:
         # Download
@@ -271,15 +270,8 @@ def download(bucket, object_name, file_name=None):
     :param file_name: local path
     :return: True if downloaded, False if failed
     """
-
-    # If S3 file_name was not specified, use DOWNLOAD_PATH/object_name
     if file_name is None:
-        file_name = DOWNLOAD_PATH.joinpath(object_name).as_posix()
-
-    # must create file_name's full parent path
-    destination_path = Path(file_name).parent
-    if not destination_path.exists():
-        destination_path.mkdir(parents=True, exist_ok=True)
+        file_name = Path(object_name).name
 
     # Download file
     s3 = boto3.client('s3')
@@ -289,13 +281,6 @@ def download(bucket, object_name, file_name=None):
         logging.error(e)
         return False
     return True
-
-
-def f1():
-    text = 'stndfaei'
-    logging.info("function f1()" + text)
-    logging.debug("text = " + str(text))
-    return 1
 
 
 # Get a list of versions for a specific component
@@ -324,12 +309,30 @@ def component_exist(name, version):
         return True
 
 
-# post component metadata
-def add_component(name, version: str):
+def add_c(name, version):
     component = {'name': str(name),
                  'version': str(version)}
 
     url = SERVER_URL + '/cli_add'
+    response = requests.post(url, json=component)
+
+    # "409 Conflict. Component already exists"
+    # "201 Created. Component is added"
+    if "409" in response.text:
+        logging.error(response.text)
+        return False
+    elif "201" in response.text:
+        logging.debug("response.text = " + str(response.text))
+        return True
+
+
+# # delete component in SQL and S3, also deletes associated SR contents
+def delete_c(name, version):
+    component = {
+        'name': str(name),
+        'version': str(version)}
+
+    url = SERVER_URL + '/cli_delete'
     response = requests.post(url, json=component)
 
     if "409" in response.text:
@@ -349,6 +352,12 @@ def get_recipe(product_name, version_number=""):
     recipe = r.json()  # converted from json str to <class 'dict'>
 
     return recipe
+
+
+def f1(*args):
+    print("args = " + str(args))
+    for a in args:
+        print(a)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,158 @@
+r"""
+
+# copy and paste these imports in Python Console to start querying while running app.py
+
+from app import db, Product, SoftwareRelease,Component, Association
+from sqlalchemy import func
+
+
+
+
+
+
+
+Product.query.all()
+SoftwareRelease.query.all()
+Component.query.all()
+Association.query.all()
+
+
+for x in Component.query.all():
+    print(x.name, x.version)
+
+
+p1 = Product(name="p1")
+db.session.add(p1)
+p2 = Product(name="p2")
+db.session.add(p2)
+
+s1 = SoftwareRelease(product_name="p1", version_number="1")
+db.session.add(s1)
+s2 = SoftwareRelease(product_name="p2", version_number="1")
+db.session.add(s2)
+
+c1 = Component(name="c1", version="1")
+db.session.add(c1)
+c2 = Component(name="c2", version="1")
+db.session.add(c2)
+
+db.session.commit()
+
+
+s1 =  SoftwareRelease.query.filter_by(product_name="p1", version_number="1").first()
+
+
+a1 = Association.query.filter_by(id=1).first()
+a2 = Association.query.filter_by(id=2).first()
+a3 = Association.query.filter_by(id=3).first()
+a4 = Association.query.filter_by(id=4).first()
+a12 = Association.query.filter_by(id=12).first()
+
+
+a1 = Association()
+a1.component = c1
+s1.components.append(a1)
+
+a2 = Association()
+a2.component = c2
+s2.components.append(a2)
+
+a3 = Association()
+a3.component = c1
+s2.components.append(a3)
+
+db.session.commit()
+
+
+a1.software_release.product_name
+
+
+
+
+
+
+a12 = Association(id=12, component=c1)
+s1.components.append(a12)
+
+
+a2.component = c2
+s2.components.append(a4)
+
+
+a2 = Association.query.filter_by(software_release_id=2, component_id=2).first()
+db.session.delete(a2)
+db.session.commit()
+
+
+a_new = Association(component=c1)
+
+
+
+
+https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html
+
+# create parent, append a child via association
+p = Parent()
+a = Association(extra_data="some data")
+a.child = Child()
+p.children.append(a)
+
+# iterate through child objects via association, including association
+# attributes
+for assoc in p.children:
+    print(assoc.extra_data)
+    print(assoc.child)
+
+
+a = Association(component=c3, destination="./dest3")
+
+
+aquery = Association.query.all()
+for a in aquery:
+    print(a.software_release.product_name + a.software_release.version_number + a.component.name + a.component.version)
+
+
+
+
+c1 = Component.query.filter_by(id=1).first()
+
+s1 = SoftwareRelease.query.filter_by(id=1).first()
+s2 = SoftwareRelease.query.filter_by(id=2).first()
+
+s1.name= "s1"
+s1.version = 1
+
+
+
+db.session.rollback()
+db.drop_all()
+db.engine.table_names()
+
+
+from sqlalchemy import func
+
+db.session.query(func.max(SoftwareRelease.version_number)).all()
+
+https://stackoverflow.com/questions/14217860/how-to-select-min-and-max-from-table-by-column-score/14360762
+
+qry = db.session.query(func.max(SoftwareRelease.version_number).label("max_score"),
+                func.min(SoftwareRelease.version_number).label("min_score"),
+                )
+res = qry.one()
+max = res.max_score
+min = res.min_score
+
+qry.filter_by(product_name="p2").all()
+[('4', '2')]
+
+qry.filter_by(product_name="p2").first().max_score
+'4'
+
+qx = db.session.query(func.max(SoftwareRelease.version_number))
+qx.filter_by(product_name="p2").first()[0]
+
+
+db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name="p2").first()[0]
+
+
+"""
