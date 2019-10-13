@@ -22,7 +22,6 @@ Vue.component('table-grid', {
 
         // To enable eg. v-bind:detail-col="true"
         selectCol: false,
-        cVerCol: false,
         cSrCol: false,
         cCol: false,
         highlighted: false, // for sr_c
@@ -88,6 +87,9 @@ const Products = {
     data() {
         return {
             products: [{}, {}],
+            searchQuery: '',
+            // must provide object structure template to use {{object.name}}
+            selectedRow: {name: ''},
 
             product_name: null,
             product_name_response: {},
@@ -95,12 +97,6 @@ const Products = {
             product_field: "name",
             product_value: "",
             product_edit_response: {},
-
-
-            searchQuery: '',
-            // must provide object structure template to use {{object.name}}
-            selectedRow: {name: ''},
-
         }
     },
 
@@ -130,6 +126,7 @@ const Products = {
 
 
         pnew: function () {
+            this.product_name_response = {};
             axios.post('/pnew', {name: this.product_name})
                 .then(response => {
                     this.product_name_response = response.data;
@@ -140,6 +137,7 @@ const Products = {
         },
 
         pdelete: function () {
+            this.product_name_response = {};
             axios.post('/pdelete', {name: this.product_name})
                 .then(response => {
                     this.product_name_response = response.data;
@@ -148,6 +146,7 @@ const Products = {
         },
 
         pedit: function () {
+            this.product_edit_response = {};
             axios.post('/pedit', {
                 name: this.product_edit,
                 field: this.product_field,
@@ -187,7 +186,7 @@ const SoftwareReleases = {
             version_number_new: "",
             sr_copy_response: {},
 
-            gridColumns: ["product_name", "version_number", "status"],
+            gridColumns: ["id", "product_name", "version_number", "status"],
 
             searchQuery: '',
             selectedRow: {name: ''},
@@ -235,6 +234,7 @@ const SoftwareReleases = {
 
 
         srnew: function () {
+            this.server_response = {};
             axios.post('/srnew', {
                 product_name: this.product_name,
                 version_number: this.version_number
@@ -248,6 +248,7 @@ const SoftwareReleases = {
         },
 
         srdelete: function () {
+            this.server_response = {};
             axios.post('/srdelete', {
                 product_name: this.product_name,
                 version_number: this.version_number
@@ -259,6 +260,7 @@ const SoftwareReleases = {
         },
 
         sredit: function () {
+            this.sr_selected_response = {};
             if (this.selectedRow.status === "Released") {
                 this.sr_selected_response = {name: 'Cannot edit "Released"'};
             } else {
@@ -276,6 +278,7 @@ const SoftwareReleases = {
         },
 
         sr_copy: function () {
+            this.sr_copy_response = {};
             axios.post('/sr_copy', {
                 product_name: this.selectedRow.product_name,
                 version_number: this.selectedRow.version_number,
@@ -325,9 +328,6 @@ const SRComponents = {
             destination: ".",
             add_response: {},
 
-
-            // highlight. Compare with sr components
-            cmax: [{}],
 
             styleCondition: false,
 
@@ -402,18 +402,11 @@ const SRComponents = {
 
         },
 
-        cmax: function () {
-            axios.get('/cmax')
-                .then(response => (this.cmax = response.data))
-                .catch(error => console.log(error));
-        },
-
     },
 
     mounted: function () {
         this.sr_c();
         this.c();
-        this.cmax()
     },
 
 };
@@ -423,271 +416,77 @@ const Components = {
 
     data: function () {
         return {
-            component_highest: [{}],
-
-            gridColumns: ['name', 'version'],
+            components: [],
+            gridColumns: ['id', 'name', 'version'],
             searchQuery: '',
-            // selectedRow: {name: '', version: ''},
-
         };
     },
 
     computed: {
         gridData: function () {
-            return this.component_highest
+            return this.components
         },
     },
 
     methods: {
-        c_high: function () {
-            axios.get('/cmax')
-                .then(response => (this.component_highest = response.data))
+        c: function () {
+            axios.get('/c')
+                .then(response => (this.components = response.data))
                 .catch(error => console.log(error));
         },
     },
 
     mounted: function () {
-        this.c_high()
+        this.c()
     },
-
-};
-
-const ComponentVersion = {
-    template: '#component-version-template',
-
-    data: function () {
-        return {
-            component_versions: [],
-
-            gridColumns: ['name', 'version'],
-            searchQuery: '',
-
-        };
-    },
-
-    computed: {
-        gridData: function () {
-            return this.component_versions
-        },
-    },
-
-    methods: {
-        c_versions: function () {
-            axios.post('/cversion',
-                {
-                    name: this.$route.params.name,
-                })
-                .then(response => (this.component_versions = response.data))
-                .catch(error => console.log(error));
-        },
-    },
-
-    mounted: function () {
-        this.c_versions()
-    },
-
 };
 
 const ComponentSR = {
+    template: '#component-sr-template',
+
     data: function () {
         return {
-            srlist: null,
+            c_sr_list: [{}],
+            gridColumns: ['id', 'product_name', 'version_number', 'status'],
+            searchQuery: '',
         };
     },
 
+    computed: {
+        gridData: function () {
+            return this.c_sr_list
+        },
+    },
     methods: {
-        csearchsr: function () {
-            axios.post('/csearchsr',
+        c_sr: function () {
+            axios.post('/c_sr',
                 {
-                    name: this.$route.params.name,
-                    version: this.$route.params.version
+                    id: this.$route.params.id,
                 })
-                .then(response => (this.srlist = response.data))
+                .then(response => (this.c_sr_list = response.data))
                 .catch(error => console.log(error));
         },
     },
 
-
     mounted: function () {
-        this.csearchsr()
-    },
-
-    template: '#component-sr-template'
-};
-
-
-const Foo = {
-    template: '#foo-template',
-
-    data: function () {
-        return {
-            message1: null,
-            message2: null,
-            posts: null
-        };
-    },
-
-    methods: {},
-
-    mounted: function () {
-
-        // http://127.0.0.1:5000/b, fixes origin policy
-        axios.get('/b')
-            .then(response => (this.message1 = response.data))
-            .catch(error => console.log(error));
-
-        axios.post('/8', {
-            firstName: 'fp1firstname',
-            lastName: 'fp1lastname'
-        })
-            .then(response => (this.message2 = response.data))
-            .catch(error => console.log(error));
-
+        this.c_sr()
     },
 
 };
-
-const Bar = {
-    template: '#bar-template',
-
-    data: function () {
-        return {
-            data1: 1,
-        };
-    },
-
-    methods: {},
-
-    mounted: function () {
-
-    },
-};
-
-const Page1 = {
-    template: '#page1-template',
-    data: function () {
-        return {
-            message: 'hello vue',
-            products: [
-                {name: "product1", property: "property1"},
-                {name: "product2", property: "property1"},
-                {name: "product3", property: "property1"},
-            ],
-            component_names: null,
-            name: "app1 name",
-            data1: "data1text",
-            picked: null,
-        }
-    },
-    methods: {
-        post5: function () {
-            axios.post('/5',
-                {
-                    firstName: '123',
-                    lastName: '123213'
-                })
-                .then(response => this.data1 = response.data)
-
-        },
-
-        func1: function () {
-            axios.post('/5', {
-                firstName: 'fp1firstname',
-                lastName: 'fp1lastname'
-            })
-                .then(response => (this.data1 = response.data))
-                .catch(error => console.log(error));
-            // this.data1 = "data1new"
-        }
-    },
-
-    mounted: function () {
-        axios
-            .get('https://api.coindesk.com/v1/bpi/currentprice.json')
-            .then(response => {
-                this.info = response.data.bpi
-            })
-            .catch(error => {
-                console.log(error);
-                this.errored = true
-            })
-            .finally(() => this.loading = false);
-
-        axios.get('/cname')
-            .then(function (response) {
-                this.component_names = response.data.component_names;
-                console.log(response);
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
-    },
-
-
-};
-
-const Page2 = {
-    template: '#page2-template',
-    data: function () {
-        return {
-            data222: "data222text",
-            data2: 2,
-            ver1: this.$route.params.ver,
-            component_name: this.$route.params.id,
-
-        };
-
-    },
-
-    methods: {
-        say: function (message) {
-            alert(message)
-        },
-
-    },
-
-
-    mounted: function () {
-
-        axios.get('/b')
-            .then(response => (this.data1 = response.data))
-            .catch(error => console.log(error));
-
-        axios.post('/5',
-            {
-                x: '1',
-                y: '2'
-            })
-            .then(response => (this.data2 = response.data))
-            .catch(error => console.log(error));
-
-    },
-};
-
 
 const routes = [
     {path: '/', component: Home},
-    {path: '/c', component: Components},
-    {path: '/c/:name', component: ComponentVersion},
-    {path: '/c/:name/:version', component: ComponentSR},
     {path: '/p', component: Products},
     {path: '/sr', component: SoftwareReleases},
     {path: '/sr/:product_name/:version_number', component: SRComponents},
-    {path: '/foo', component: Foo},
-    {path: '/bar', component: Bar},
-    {path: '/page1', component: Page1},
-    {path: '/page2/:ver/:id', component: Page2},
-
+    {path: '/c', component: Components},
+    {path: '/c/:id', component: ComponentSR},
 ];
 
 const router = new VueRouter({
-    routes // short for `routes: routes`
+    routes
 });
 
-// 4. Create and mount the root instance. inject the router with the router option to make the whole app router-aware.
 const app = new Vue({
     router
 }).$mount('#app');
-
-
-
