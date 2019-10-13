@@ -1,13 +1,10 @@
 ""r"""
 
 """
+import logging
 from itertools import groupby
-
 from flask import Flask, request, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
-
-import logging
-
 from sqlalchemy import func
 
 logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
@@ -58,274 +55,16 @@ class Association(db.Model):
 
 db.create_all()
 
-r"""
-# copy and paste this line to Python Console to start manual querying
-
-from app import db, Product, SoftwareRelease,Component, Association
-from sqlalchemy import func
-
-
-Product.query.all()
-SoftwareRelease.query.all()
-Component.query.all()
-Association.query.all()
-
-
-for x in Component.query.all():
-    print(x.name, x.version)
-
-
-p1 = Product(name="p1")
-db.session.add(p1)
-p2 = Product(name="p2")
-db.session.add(p2)
-
-s1 = SoftwareRelease(product_name="p1", version_number="1")
-db.session.add(s1)
-s2 = SoftwareRelease(product_name="p2", version_number="1")
-db.session.add(s2)
-
-c1 = Component(name="c1", version="1")
-db.session.add(c1)
-c2 = Component(name="c2", version="1")
-db.session.add(c2)
-
-db.session.commit()
-
-
-s1 =  SoftwareRelease.query.filter_by(product_name="p1", version_number="1").first()
-
-
-a1 = Association.query.filter_by(id=1).first()
-a2 = Association.query.filter_by(id=2).first()
-a3 = Association.query.filter_by(id=3).first()
-a4 = Association.query.filter_by(id=4).first()
-a12 = Association.query.filter_by(id=12).first()
-
-
-a1 = Association()
-a1.component = c1
-s1.components.append(a1)
-
-a2 = Association()
-a2.component = c2
-s2.components.append(a2)
-
-a3 = Association()
-a3.component = c1
-s2.components.append(a3)
-
-db.session.commit()
-
-
-a1.software_release.product_name
-
-
-
-
-
-
-a12 = Association(id=12, component=c1)
-s1.components.append(a12)
-
-
-a2.component = c2
-s2.components.append(a4)
-
-
-a2 = Association.query.filter_by(software_release_id=2, component_id=2).first()
-db.session.delete(a2)
-db.session.commit()
-
-
-a_new = Association(component=c1)
-
-
-
-
-
-
-
-
-https://docs.sqlalchemy.org/en/13/orm/basic_relationships.html
-
-# create parent, append a child via association
-p = Parent()
-a = Association(extra_data="some data")
-a.child = Child()
-p.children.append(a)
-
-# iterate through child objects via association, including association
-# attributes
-for assoc in p.children:
-    print(assoc.extra_data)
-    print(assoc.child)
-
-
-a = Association(component=c3, destination="./dest3")
-
-
-aquery = Association.query.all()
-for a in aquery:
-    print(a.software_release.product_name + a.software_release.version_number + a.component.name + a.component.version)
-    
-
-
-
-
-
-c1 = Component.query.filter_by(id=1).first()
-
-s1 = SoftwareRelease.query.filter_by(id=1).first()
-s2 = SoftwareRelease.query.filter_by(id=2).first()
-
-s1.name= "s1"
-s1.version = 1
-
-
-
-db.session.rollback()
-db.drop_all()
-db.engine.table_names()
-
-
-
-
-from sqlalchemy import func
-
-db.session.query(func.max(SoftwareRelease.version_number)).all()
-
-https://stackoverflow.com/questions/14217860/how-to-select-min-and-max-from-table-by-column-score/14360762
-
-qry = db.session.query(func.max(SoftwareRelease.version_number).label("max_score"), 
-                func.min(SoftwareRelease.version_number).label("min_score"),
-                )
-res = qry.one()
-max = res.max_score
-min = res.min_score
-
-qry.filter_by(product_name="p2").all()
-[('4', '2')]
-
-qry.filter_by(product_name="p2").first().max_score
-'4'
-
-qx = db.session.query(func.max(SoftwareRelease.version_number))
-qx.filter_by(product_name="p2").first()[0]
-
-
-db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name="p2").first()[0]
-
-
-
-
-
-"""
-
 
 @app.route('/')
 def index():
-    # Not using template engine
-    # return render_template('index.html')
-    # Must force hard reload in browser CTRL+F5 to use updated static files
+    # Must force hard reload in browser CTRL+F5 update static files
     return redirect("/static/index.html")
 
 
-# add component
-# http://127.0.0.1:5000/cli_add
-@app.route('/cli_add', methods=['POST'])
-def cli_add():
-    # component = json.loads(request.data)  # {'name': name, 'version': version} # <class 'dict'>
-
-    component = request.get_json()  # <class 'dict'>
-    name = component['name']
-    version = component['version']
-    logging.debug("name = " + str(name))
-    logging.debug("version = " + str(version))
-
-    # test with Postman {"name": "c1", "version": "1"}
-    # query component
-    query_component = db.session.query(Component).filter_by(name=name, version=version).first()
-
-    # check if exist
-    if query_component is not None:
-        return "409 Conflict. Component already exists"
-
-    # add component
-
-    try:
-        component_new = Component(name=name, version=version)
-        db.session.add(component_new)
-        db.session.commit()
-        return "201 Created. Component is added"
-    except:
-        db.session.rollback()
-        raise
-    finally:
-        db.session.close()
-        return "500 Unknown error"
-
-    # j1 = jsonify(username="user1", email="email2")
-    # logging.debug("j1 = " + str(j1))
-    # logging.debug("type(j1) = " + str(type(j1)))  # <class 'flask.wrappers.Response'>
-
-
-# check component's existence in database
-# http://127.0.0.1:5000/cli_exist
-@app.route('/cli_exist', methods=['POST', 'GET'])
-def cli_exist():
-    component = request.get_json()  # <class 'dict'>
-    name = component['name']
-    version = component['version']
-
-    query_component = db.session.query(Component).filter_by(name=name, version=version).first()
-
-    # check if exist
-    if query_component is not None:
-        return "409 Conflict. Component already exists"
-
-    return "404 Not Found. Component does not exist"
-
-
-# bring sample recipe
-# http://127.0.0.1:5000/b
-@app.route('/b', methods=['POST', 'GET'])
-def bring():
-    c1 = {'name': 'x', 'version': '1'}
-    c2 = {'name': 'y', 'version': '2'}
-    c3 = {'name': 'z', 'version': '3'}
-    product1 = {'Name': 'product1'}
-
-    # recipe == software release
-    r1 = {
-        'Product': product1,
-        'Version Number': '1.2.3.4',
-        'Status': 'In Development',
-        'component_list': [
-            c1,
-            c2,
-            c3
-        ]
-    }
-
-    if request.method == 'POST':
-        return jsonify(r1)
-
-    return jsonify(r1)
-
-
-# http://127.0.0.1:5000/r
-@app.route('/r', methods=['POST', 'GET'])
-def requestreturn():
-    if request.method == 'POST':
-        return jsonify(request.data)
-
-    return 'r page text message'
-
-
-# view all for debugging
+# view all with JSONView on Chrome for debugging
 # http://127.0.0.1:5000/v
-@app.route('/v', methods=['POST', 'GET'])
+@app.route('/v', methods=['GET'])
 def view():
     pquery = Product.query.all()
     squery = SoftwareRelease.query.all()
@@ -374,13 +113,14 @@ def c():
 
     clist = []
     for c in cquery:
-        clist.append({'name': c.name,
+        clist.append({'id': c.id,
+                      'name': c.name,
                       'version': c.version})
 
     return jsonify(clist)
 
 
-# unique component list, each its max (highest) version number
+# unique component list, each its max (highest) version number. Not used
 # http://127.0.0.1:5000/cmax
 @app.route('/cmax', methods=['GET'])
 def cmax():
@@ -400,20 +140,6 @@ def cmax():
         clist_version_max.append(max(g, key=lambda x: x['version']))
 
     return jsonify(clist_version_max)
-
-
-# Get a list of all component names, unique name
-# http://127.0.0.1:5000/cname
-@app.route('/cname', methods=['GET'])
-def cname():
-    cquery = Component.query.all()
-
-    cset = set()
-    for c in cquery:
-        cset.add(c.name)
-    cname_list = sorted(list(cset))
-
-    return jsonify(cname_list)
 
 
 # Get a list of versions for a specific component
@@ -440,28 +166,28 @@ def cversion():
     return jsonify(cversion_sorted)
 
 
-# rename to c_sr
 # Get a list of software releases associated with a component
 # http://127.0.0.1:5000/csearchsr
-@app.route('/csearchsr', methods=['POST'])
-def csearchsr():
+@app.route('/c_sr', methods=['POST'])
+def c_sr():
     """
-    csearchsr is POST. request body example: {"name": "component_name", "version": "v"}
     :return:
     """
     req_data = request.get_json()  # <class 'dict'>
     logging.debug("req_data = " + str(req_data))
 
-    name = req_data['name']
-    version = req_data['version']
+    id = req_data['id']
 
-    component = Component.query.filter_by(name=name, version=version).first()
+    component = Component.query.filter_by(id=id).first()
     c_sr_association = component.software_releases
 
     srlist = []
     for a in c_sr_association:
-        srlist.append({'product_name': a.software_release.product_name,
-                       'version_number': a.software_release.version_number})
+        srlist.append({
+            'id': a.software_release.id,
+            'product_name': a.software_release.product_name,
+            'version_number': a.software_release.version_number,
+            'status': a.software_release.status})
 
     return jsonify(srlist)
 
@@ -560,9 +286,11 @@ def sr():
     srlist = []
     for sr in srquery:
         srlist.append(
-            {'product_name': sr.product_name,
-             'version_number': sr.version_number,
-             'status': sr.status})
+            {
+                'id': sr.id,
+                'product_name': sr.product_name,
+                'version_number': sr.version_number,
+                'status': sr.status})
 
     return jsonify(srlist)
 
@@ -649,15 +377,12 @@ def sredit():
 @app.route('/sr_copy', methods=['POST'])
 def sr_copy():
     r"""
-
     Postman test
-
 {
     "product_name": "p3",
     "version_number": "1",
     "version_number_new": "2",
 }
-
     :return:
     """
     req_data = request.get_json()
@@ -692,11 +417,13 @@ def sr_copy():
         return jsonify(return_code)
 
 
-# {"product_name": "p1", "version_number": "1"}
-# sr c list
 # http://127.0.0.1:5000/sr_c
 @app.route('/sr_c', methods=['POST'])
 def sr_c():
+    """
+
+    :return:
+    """
     req_data = request.get_json()
     logging.debug("req_data = " + str(req_data))
 
@@ -716,7 +443,7 @@ def sr_c():
     return jsonify(sr_clist)
 
 
-# sr's c with current version highlight
+# SR's components with newest version parameter. to be optimized
 # http://127.0.0.1:5000/sr_c_highlight
 @app.route('/sr_c_highlight', methods=['POST'])
 def sr_c_highlight():
@@ -729,7 +456,6 @@ def sr_c_highlight():
     sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
 
     sr_clist = []
-
     if sr is not None:  # must check if sr is not NoneType
         for a in sr.components:
             sr_clist.append({'name': a.component.name,
@@ -738,35 +464,12 @@ def sr_c_highlight():
     else:
         return jsonify([])
 
-    # from /cmax
-    cquery = Component.query.all()
-
-    clist = []
-    for c in cquery:
-        clist.append({'name': c.name,
-                      'version': c.version})
-
-    # sort by name, which groups them together
-    clist_sorted = sorted(clist, key=lambda x: x['name'])
-
-    # sort name group by version, then append one with max version
-    clist_version_max = []
-    for k, g in groupby(clist_sorted, lambda x: x['name']):
-        clist_version_max.append(max(g, key=lambda x: x['version']))
-
-    # { "c1" : "c1.highest_version", "c2" : "c2.highest_version", ... }
-    clist_highlight = {}
-    for c in clist_version_max:
-        clist_highlight[str(c['name'])] = str(c['version'])
-
     for c in sr_clist:
-        newest_version = clist_highlight[c['name']]
+        newest_version = db.session.query(func.max(Component.version)).filter_by(name=c['name']).first()[0]
         if c['version'] < newest_version:
             c['newest_version'] = newest_version
-        elif c['version'] == newest_version:
-            c['newest_version'] = "This"
         else:
-            c['newest_version'] = "Unknown"
+            c['newest_version'] = "This"
 
     return jsonify(sr_clist)
 
@@ -818,7 +521,6 @@ def sr_add_c():
         return jsonify(return_code)
 
 
-# sr name ver, c name ver URL ( selected from clist)
 # http://127.0.0.1:5000/sr_remove_c
 @app.route('/sr_remove_c', methods=['POST'])
 def sr_remove_c():
@@ -865,6 +567,84 @@ def sr_remove_c():
         return jsonify(return_code)
 
 
+# cli.py API
+
+# add component
+# http://127.0.0.1:5000/cli_add
+@app.route('/cli_add', methods=['POST'])
+def cli_add():
+    component = request.get_json()  # <class 'dict'>
+    name = component['name']
+    version = component['version']
+
+    # test with Postman {"name": "c1", "version": "1"}
+    # query component
+    query_component = db.session.query(Component).filter_by(name=name, version=version).first()
+
+    # check if exist
+    if query_component is not None:
+        return "409 Conflict. Component already exists"
+
+    # add component
+
+    try:
+        component_new = Component(name=name, version=version)
+        db.session.add(component_new)
+        db.session.commit()
+        return "201 Created. Component is added"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return "500 Unknown error"
+
+
+# delete component in database, also deletes associated SR contents.
+# http://127.0.0.1:5000/cli_delete
+@app.route('/cli_delete', methods=['POST'])
+def cli_delete():
+    req_data = request.get_json()  # <class 'dict'>
+    name = req_data['name']
+    version = req_data['version']
+
+    component = Component.query.filter_by(name=name, version=version).first()
+
+    return_code = {"name": "Error"}
+
+    if component is not None:
+        try:
+            db.session.delete(component)
+            db.session.commit()
+            return_code['name'] = "Success"
+
+            # also need to delete in Storage
+
+        except:
+            db.session.rollback()
+            raise
+        finally:
+            db.session.close()
+            return jsonify(return_code)
+
+
+# check component's existence in database
+# http://127.0.0.1:5000/cli_exist
+@app.route('/cli_exist', methods=['POST', 'GET'])
+def cli_exist():
+    component = request.get_json()  # <class 'dict'>
+    name = component['name']
+    version = component['version']
+
+    query_component = db.session.query(Component).filter_by(name=name, version=version).first()
+
+    # check if exist
+    if query_component is not None:
+        return "409 Conflict. Component already exists"
+
+    return "404 Not Found. Component does not exist"
+
+
 # complete recipe list for cli
 # take sr name ver, return full json recipe
 # http://127.0.0.1:5000/cli_recipe
@@ -876,7 +656,7 @@ def cli_recipe():
     "version_number": "3"
     }
 
-    :return: recipe json
+    :return: recipe
     """
     req_data = request.get_json()
     logging.debug("req_data = " + str(req_data))
@@ -886,7 +666,8 @@ def cli_recipe():
 
     if version_number is "":
         # get highest version number for recipe
-        version_number = db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name=product_name).first()[0]
+        version_number = \
+            db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name=product_name).first()[0]
 
     sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
 
@@ -912,6 +693,7 @@ def cli_recipe():
         return jsonify(recipe)
 
 
+# return request json data. For testing
 @app.route('/5', methods=['POST', 'GET'])
 def f5():
     if request.method == 'POST':
