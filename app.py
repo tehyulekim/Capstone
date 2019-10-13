@@ -8,6 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 import logging
 
+from sqlalchemy import func
+
 logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
 
 app = Flask(__name__)
@@ -57,7 +59,11 @@ class Association(db.Model):
 db.create_all()
 
 r"""
+# copy and paste this line to Python Console to start manual querying
+
 from app import db, Product, SoftwareRelease,Component, Association
+from sqlalchemy import func
+
 
 Product.query.all()
 SoftwareRelease.query.all()
@@ -183,6 +189,37 @@ db.drop_all()
 db.engine.table_names()
 
 
+
+
+from sqlalchemy import func
+
+db.session.query(func.max(SoftwareRelease.version_number)).all()
+
+https://stackoverflow.com/questions/14217860/how-to-select-min-and-max-from-table-by-column-score/14360762
+
+qry = db.session.query(func.max(SoftwareRelease.version_number).label("max_score"), 
+                func.min(SoftwareRelease.version_number).label("min_score"),
+                )
+res = qry.one()
+max = res.max_score
+min = res.min_score
+
+qry.filter_by(product_name="p2").all()
+[('4', '2')]
+
+qry.filter_by(product_name="p2").first().max_score
+'4'
+
+qx = db.session.query(func.max(SoftwareRelease.version_number))
+qx.filter_by(product_name="p2").first()[0]
+
+
+db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name="p2").first()[0]
+
+
+
+
+
 """
 
 
@@ -215,15 +252,22 @@ def cli_add():
         return "409 Conflict. Component already exists"
 
     # add component
-    component_new = Component(name=name, version=version)
-    db.session.add(component_new)
-    db.session.commit()
+
+    try:
+        component_new = Component(name=name, version=version)
+        db.session.add(component_new)
+        db.session.commit()
+        return "201 Created. Component is added"
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+        return "500 Unknown error"
 
     # j1 = jsonify(username="user1", email="email2")
     # logging.debug("j1 = " + str(j1))
     # logging.debug("type(j1) = " + str(type(j1)))  # <class 'flask.wrappers.Response'>
-
-    return "201 Created. Component is added"
 
 
 # check component's existence in database
@@ -823,9 +867,9 @@ def sr_remove_c():
 
 # complete recipe list for cli
 # take sr name ver, return full json recipe
-# http://127.0.0.1:5000/recipe
-@app.route('/recipe', methods=['POST'])
-def recipe():
+# http://127.0.0.1:5000/cli_recipe
+@app.route('/cli_recipe', methods=['POST'])
+def cli_recipe():
     """
     {
     "product_name": "p2",
@@ -840,20 +884,32 @@ def recipe():
     product_name = req_data['product_name']
     version_number = req_data['version_number']
 
+    if version_number is "":
+        # get highest version number for recipe
+        version_number = db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name=product_name).first()[0]
+
     sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
 
-    clist = []
-    for a in sr.components:
-        clist.append({'name': a.component.name,
-                      'version': a.component.version,
-                      'destination': a.destination})
+    recipe = {'code': '404'}
 
-    recipe = {'product_name': sr.product_name,
-              'version_number': sr.version_number,
-              'status': sr.status,
-              'components': clist}
+    if sr is not None:  # must check if sr is not NoneType
+        clist = []
+        for a in sr.components:
+            clist.append({'name': a.component.name,
+                          'version': a.component.version,
+                          'destination': a.destination})
 
-    return jsonify(recipe)
+        recipe = {
+            'code': '200',
+            'product_name': sr.product_name,
+            'version_number': sr.version_number,
+            'status': sr.status,
+            'components': clist}
+
+        return jsonify(recipe)
+
+    else:
+        return jsonify(recipe)
 
 
 @app.route('/5', methods=['POST', 'GET'])
