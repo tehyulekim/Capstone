@@ -625,7 +625,8 @@ def cli_delete():
             raise
         finally:
             db.session.close()
-            return jsonify(return_code)
+
+    return jsonify(return_code)
 
 
 # check component's existence in database

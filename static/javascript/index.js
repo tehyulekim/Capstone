@@ -86,7 +86,7 @@ const Products = {
 
     data() {
         return {
-            products: [{}, {}],
+            products: [{}],
             searchQuery: '',
             // must provide object structure template to use {{object.name}}
             selectedRow: {name: ''},
@@ -130,7 +130,7 @@ const Products = {
             axios.post('/pnew', {name: this.product_name})
                 .then(response => {
                     this.product_name_response = response.data;
-                    this.pname()
+                    this.p()
                 })
                 .catch(error => console.log(error));
 
@@ -141,7 +141,7 @@ const Products = {
             axios.post('/pdelete', {name: this.product_name})
                 .then(response => {
                     this.product_name_response = response.data;
-                    this.pname()
+                    this.p()
                 }).catch(error => console.log(error));
         },
 
@@ -154,7 +154,7 @@ const Products = {
             })
                 .then(response => {
                     this.product_edit_response = response.data;
-                    this.pname()
+                    this.p()
                 }).catch(error => console.log(error));
         },
 
@@ -186,6 +186,7 @@ const SoftwareReleases = {
             version_number_new: "",
             sr_copy_response: {},
 
+            attributeField: ["version_number", "status"],
             gridColumns: ["id", "product_name", "version_number", "status"],
 
             searchQuery: '',
@@ -307,6 +308,7 @@ const SRComponents = {
 
     data() {
         return {
+            recipe_json: {"Loading": "Recipe_JSON"},
 
             // v-bind:style="(styleCondition ? styleObject: {})"
             sr_components: [{}],
@@ -346,10 +348,26 @@ const SRComponents = {
                 return (this.selectedRow2.name + " v" + this.selectedRow2.version)
             }
         },
+
+        sr_status: function () {
+            return this.recipe_json.status
+        }
+
     },
 
     methods: {
-        // previously /sr_c
+        cli_recipe: function () {
+            axios.post('/cli_recipe', {
+                product_name: this.$route.params.product_name,
+                version_number: this.$route.params.version_number
+            })
+                .then(response => {
+                    this.recipe_json = response.data;
+                })
+                .catch(error => console.log(error));
+        },
+
+
         sr_c: function () {
             axios.post('/sr_c_highlight', {
                 product_name: this.$route.params.product_name,
@@ -370,35 +388,42 @@ const SRComponents = {
 
         sr_add_c: function () {
             this.add_response = {};
-            axios.post('/sr_add_c', {
-                product_name: this.$route.params.product_name,
-                version_number: this.$route.params.version_number,
-                name: this.selectedRow2.name,
-                version: this.selectedRow2.version,
-                destination: this.destination
-            })
-                .then(response => {
-                    this.add_response = response.data;
-                    this.sr_c();
+            if (this.sr_status === "Released") {
+                this.add_response = {name: 'Cannot edit "Released"'};
+            } else {
+                axios.post('/sr_add_c', {
+                    product_name: this.$route.params.product_name,
+                    version_number: this.$route.params.version_number,
+                    name: this.selectedRow2.name,
+                    version: this.selectedRow2.version,
+                    destination: this.destination
                 })
-                .catch(error => console.log(error));
-
+                    .then(response => {
+                        this.add_response = response.data;
+                        this.sr_c();
+                    })
+                    .catch(error => console.log(error));
+            }
         },
 
         sr_remove_c: function () {
             this.delete_response = {};
-            axios.post('/sr_remove_c', {
-                product_name: this.$route.params.product_name,
-                version_number: this.$route.params.version_number,
-                name: this.selectedRow.name,
-                version: this.selectedRow.version,
-                destination: this.selectedRow.destination
-            })
-                .then(response => {
-                    this.delete_response = response.data;
-                    this.sr_c();
+            if (this.sr_status === "Released") {
+                this.delete_response = {name: 'Cannot edit "Released"'};
+            } else {
+                axios.post('/sr_remove_c', {
+                    product_name: this.$route.params.product_name,
+                    version_number: this.$route.params.version_number,
+                    name: this.selectedRow.name,
+                    version: this.selectedRow.version,
+                    destination: this.selectedRow.destination
                 })
-                .catch(error => console.log(error));
+                    .then(response => {
+                        this.delete_response = response.data;
+                        this.sr_c();
+                    })
+                    .catch(error => console.log(error));
+            }
 
         },
 
@@ -407,6 +432,7 @@ const SRComponents = {
     mounted: function () {
         this.sr_c();
         this.c();
+        this.cli_recipe();
     },
 
 };
@@ -416,7 +442,7 @@ const Components = {
 
     data: function () {
         return {
-            components: [],
+            components: [{}],
             gridColumns: ['id', 'name', 'version'],
             searchQuery: '',
         };

@@ -5,6 +5,28 @@ BUCKET
 SERVER_URL
 OUTPUT_FOLDER
 
+
+Must install:
+
+pip install requests
+pip install fire
+pip install boto3
+pip install awscli
+
+
+Must configure: 
+
+$ aws configure
+
+enter your AWS account, and S3 Bucket
+otherwise use this user account temporarily to access BUCKET 'capstonebuckets3'
+
+AKIARSKDD7KW6CZDHZ4G
+IAM0/AH/NqhJgtXFaJGIhTzEEbH1jU3bpMDGgVFF
+ap-southeast-2
+json
+
+
 """
 
 import os
@@ -18,7 +40,6 @@ from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)  # .DEBUG .INFO .ERROR
 
-# BUCKET = 'capstonebuckets3'
 BUCKET = 'capstonebuckets3'
 
 # SERVER_URL = 'https://capstoneherokuapp.herokuapp.com/'
@@ -27,15 +48,15 @@ SERVER_URL = 'http://127.0.0.1:5000'
 OUTPUT_FOLDER = Path(r"./download")
 
 
-# component compress and upload
 def cu(name, version, *files):
     """
+    Compress and Upload Component
+
     $ python cli.py cu <name> <version> <*files>
 
     Example:
         $ python cli.py cu z 1 folder1 README.md
     will create z--v1.zip containing folder1 and README.md
-
 
     $ python cli.py cu product/c0 1 product/0.txt
     creates ./c0--v1.zip locally
@@ -96,6 +117,8 @@ def cu(name, version, *files):
 # recipe download and extract
 def rde(product_name, version_number=""):
     """
+    Recipe Download and Extract
+
     $ python cli.py rde <product> <version>
 
     Example: finds recipe with product named product1 and version 1.2.3.4
@@ -125,6 +148,8 @@ def rde(product_name, version_number=""):
 # component download and extract to target directory
 def de(name, version, destination='.'):
     """
+    Download and Extract Component
+
     def de(name, version, target_dir='./download/product'):
 
 
@@ -182,9 +207,8 @@ def de(name, version, destination='.'):
 
 # commandline zipfile source code modified from zipfile.py in https://docs.python.org/3/library/zipfile.html
 # to write: compress(), extract(), test_zip, list_zip
-
-# Create zipfile from source files.
 def compress(zip_name, *files):
+    """Create zipfile from source files."""
     def add_to_zip(zf, path, zippath):
         if os.path.isfile(path):
             zf.write(path, zippath, 8)  # ZIP_DEFLATED = 8
@@ -205,9 +229,10 @@ def compress(zip_name, *files):
             add_to_zip(zf, path, zippath)
 
 
-# Extract zipfile into target directory. Automatically creates target directory if not exist.
+#
 def extract(src, target_dir):
     """
+    Extract zipfile into target directory. Automatically creates target directory if not exist.
     :param src:
     :param target_dir:
     :return:
@@ -216,8 +241,9 @@ def extract(src, target_dir):
         zf.extractall(target_dir)
 
 
-# Test whether the zipfile is valid or not.
+
 def ziptest(src):
+    """Test whether the zipfile is valid or not."""
     with ZipFile(src, 'r') as zf:
         bad_file = zf.testzip()
     if bad_file:
@@ -225,8 +251,8 @@ def ziptest(src):
     print(src, "Done testing: zipfile is valid")
 
 
-# List files in a zipfile.
 def list_zip(src):
+    """List files in a zipfile"""
     with ZipFile(src, 'r') as zf:
         zf.printdir()
 
@@ -283,12 +309,16 @@ def download(bucket, object_name, file_name=None):
     return True
 
 
-# Get a list of versions for a specific component
 def component_version(name):
-    component = {'name': str(name)}
+    """
+    Get a list of versions for a specific component
+    :param name:
+    :return:
+    """
+    req_data = {'name': str(name)}
 
     url = SERVER_URL + '/cversion'
-    response = requests.post(url, json=component)
+    response = requests.post(url, json=req_data)
     logging.debug("response.text = " + str(response.text))
 
     return response.text
@@ -296,11 +326,17 @@ def component_version(name):
 
 # check if component exist in database
 def component_exist(name, version):
-    component = {'name': str(name),
-                 'version': str(version)}
+    """
+    Check if component exists
+    :param name:
+    :param version:
+    :return:
+    """
+    req_data = {'name': str(name),
+                'version': str(version)}
 
     url = SERVER_URL + '/cli_exist'
-    response = requests.post(url, json=component)
+    response = requests.post(url, json=req_data)
     logging.debug("response.text = " + str(response.text))
 
     if "404" in response.text:
@@ -310,11 +346,17 @@ def component_exist(name, version):
 
 
 def add_c(name, version):
-    component = {'name': str(name),
-                 'version': str(version)}
+    """
+    Add Component metadata
+    :param name:
+    :param version:
+    :return:
+    """
+    req_data = {'name': str(name),
+                'version': str(version)}
 
     url = SERVER_URL + '/cli_add'
-    response = requests.post(url, json=component)
+    response = requests.post(url, json=req_data)
 
     # "409 Conflict. Component already exists"
     # "201 Created. Component is added"
@@ -328,22 +370,55 @@ def add_c(name, version):
 
 # # delete component in SQL and S3, also deletes associated SR contents
 def delete_c(name, version):
-    component = {
-        'name': str(name),
-        'version': str(version)}
+    """
+    Delete Component
+    :param name:
+    :param version:
+    :return:
+    """
+    req_data = {'name': str(name),
+                'version': str(version)}
 
     url = SERVER_URL + '/cli_delete'
-    response = requests.post(url, json=component)
+    response = requests.post(url, json=req_data)
+    return response.text
 
-    if "409" in response.text:
-        logging.error(response.text)
-        return False
-    elif "201" in response.text:
-        logging.debug("response.text = " + str(response.text))
-        return True
+
+def delete_p(name):
+    """
+    Delete Product
+    :param name:
+    :return:
+    """
+    req_data = {'name': str(name)}
+
+    url = SERVER_URL + '/pdelete'
+    response = requests.post(url, json=req_data)
+    return response.text
+
+
+def delete_sr(product_name, version_number):
+    """
+    Delete Software Release
+    :param product_name:
+    :param version_number:
+    :return:
+    """
+    req_data = {'product_name': str(product_name),
+                'version_number': str(version_number)}
+
+    url = SERVER_URL + '/srdelete'
+    response = requests.post(url, json=req_data)
+    return response.text
 
 
 def get_recipe(product_name, version_number=""):
+    """
+    Get Recipe
+    :param product_name:
+    :param version_number:
+    :return:
+    """
     url = SERVER_URL + '/cli_recipe'
     req_data = {'product_name': str(product_name),
                 'version_number': str(version_number)}

@@ -15,14 +15,6 @@ f2(compress)
 
 
 
-
-
-"""
-from pathlib import Path
-
-import cli
-
-
 # file list of wildcards, => parse to file list
 def f1(*files):
     file_list = []
@@ -33,9 +25,14 @@ def f1(*files):
 
 
 list3 = f1(*['_Note/*.txt', '_Note/*.js'], '_Note/*.py', '_Note/*.vue')
-
 # cli.compress('z.zip', *list3)
 
+
+
+"""
+
+import cli
+from pathlib import Path
 
 component1 = [
     'product/1/2',
