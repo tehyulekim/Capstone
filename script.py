@@ -29,11 +29,8 @@ list3 = f1(*['_Note/*.txt', '_Note/*.js'], '_Note/*.py', '_Note/*.vue')
 
 
 
-
-
-
-
 """
+
 import cli
 from pathlib import Path
 
