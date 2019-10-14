@@ -5,6 +5,32 @@ BUCKET
 SERVER_URL
 OUTPUT_FOLDER
 
+
+
+Must install:
+
+pip install requests
+pip install fire
+pip install boto3
+pip install awscli
+
+
+Must configure: 
+
+$ aws configure
+
+
+
+your AWS account, and S3 Bucket
+
+otherwise use this user account temporarily to access BUCKET 'capstonebuckets3'
+
+AKIARSKDD7KW6CZDHZ4G
+IAM0/AH/NqhJgtXFaJGIhTzEEbH1jU3bpMDGgVFF
+ap-southeast-2
+json
+
+
 """
 
 import os
@@ -21,21 +47,22 @@ logging.basicConfig(level=logging.INFO)  # .DEBUG .INFO .ERROR
 # BUCKET = 'capstonebuckets3'
 BUCKET = 'capstonebuckets3'
 
-# SERVER_URL = 'https://capstoneherokuapp.herokuapp.com/'
-SERVER_URL = 'http://127.0.0.1:5000'
+SERVER_URL = 'https://capstoneherokuapp.herokuapp.com/'
+# SERVER_URL = 'http://127.0.0.1:5000'
 
+# OUTPUT_FOLDER = Path(r"./download")
 OUTPUT_FOLDER = Path(r"./download")
 
 
-# component compress and upload
 def cu(name, version, *files):
     """
+    Compress and Upload Component
+
     $ python cli.py cu <name> <version> <*files>
 
     Example:
         $ python cli.py cu z 1 folder1 README.md
     will create z--v1.zip containing folder1 and README.md
-
 
     $ python cli.py cu product/c0 1 product/0.txt
     creates ./c0--v1.zip locally
@@ -96,6 +123,8 @@ def cu(name, version, *files):
 # recipe download and extract
 def rde(product_name, version_number=""):
     """
+    Recipe Download and Extract
+
     $ python cli.py rde <product> <version>
 
     Example: finds recipe with product named product1 and version 1.2.3.4
@@ -125,6 +154,8 @@ def rde(product_name, version_number=""):
 # component download and extract to target directory
 def de(name, version, destination='.'):
     """
+    Download and Extract Component
+
     def de(name, version, target_dir='./download/product'):
 
 
@@ -335,12 +366,8 @@ def delete_c(name, version):
     url = SERVER_URL + '/cli_delete'
     response = requests.post(url, json=component)
 
-    if "409" in response.text:
-        logging.error(response.text)
-        return False
-    elif "201" in response.text:
-        logging.debug("response.text = " + str(response.text))
-        return True
+
+    return response.text
 
 
 def get_recipe(product_name, version_number=""):

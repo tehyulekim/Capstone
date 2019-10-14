@@ -130,7 +130,7 @@ const Products = {
             axios.post('/pnew', {name: this.product_name})
                 .then(response => {
                     this.product_name_response = response.data;
-                    this.pname()
+                    this.p()
                 })
                 .catch(error => console.log(error));
 
@@ -141,7 +141,7 @@ const Products = {
             axios.post('/pdelete', {name: this.product_name})
                 .then(response => {
                     this.product_name_response = response.data;
-                    this.pname()
+                    this.p()
                 }).catch(error => console.log(error));
         },
 
@@ -154,7 +154,7 @@ const Products = {
             })
                 .then(response => {
                     this.product_edit_response = response.data;
-                    this.pname()
+                    this.p()
                 }).catch(error => console.log(error));
         },
 
