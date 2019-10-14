@@ -11,10 +11,6 @@ f( *list, 3,4 ) => 1,2,3,4
 
 f2(compress) 
 
-
-
-
-
 # file list of wildcards, => parse to file list
 def f1(*files):
     file_list = []
@@ -23,20 +19,27 @@ def f1(*files):
             file_list.append(file_plain.as_posix())
     return file_list
 
-
 list3 = f1(*['_Note/*.txt', '_Note/*.js'], '_Note/*.py', '_Note/*.vue')
 # cli.compress('z.zip', *list3)
+
+
+
+
+
+
+
+
 
 
 
 """
 
 import cli
-from pathlib import Path
 
-component1 = [
-    'product/1/2',
-    'product/1/*.txt',
+component = [
+    'product/4.css',
+    'product/4.html',
+    'product/4.js',
 ]
 
-cli.cu('c1', '1.1.1.1', *component1)
+cli.cu('c4', '1.0.0.0', *component)
