@@ -12,6 +12,7 @@ docutils==0.15.2
 fire==0.2.1
 Flask==1.1.1
 Flask-SQLAlchemy==2.4.0
+Flask-Uploads==0.2.1
 gunicorn==19.9.0
 idna==2.8
 importlib-metadata==0.23

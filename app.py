@@ -1,15 +1,20 @@
 ""r"""
 
 """
+import os
 import logging
 from itertools import groupby
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from werkzeug.utils import secure_filename
 
 logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
+ALLOWED_EXTENSIONS = {'txt', 'zip', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
+
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 app.config[
     'SQLALCHEMY_DATABASE_URI'] = 'postgres://yijwjkfpucdepl:76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788@ec2-54-221-214-3.compute-1.amazonaws.com:5432/del3ceijjamsso'
@@ -59,7 +64,7 @@ db.create_all()
 @app.route('/')
 def index():
     # Must force hard reload in browser CTRL+F5 update static files
-    return redirect("/static/index.html")
+    return redirect("static/index.html")
 
 
 # view all with JSONView on Chrome for debugging
@@ -692,6 +697,38 @@ def cli_recipe():
 
     else:
         return jsonify(recipe)
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/u', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also submit an empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('upload_file', filename=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    '''
 
 
 # return request json data. For testing

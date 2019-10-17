@@ -45,7 +45,7 @@ BUCKET = 'capstonebuckets3'
 # SERVER_URL = 'https://capstoneherokuapp.herokuapp.com/'
 SERVER_URL = 'http://127.0.0.1:5000'
 
-OUTPUT_FOLDER = Path(r"./download")
+OUTPUT_FOLDER = Path(r"./downloads")
 
 
 def cu(name, version, *files):

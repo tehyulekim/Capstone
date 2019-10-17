@@ -8,3 +8,6 @@ $ python cli.py
 
 https://capstoneherokuapp.herokuapp.com/
 CTRL Reload to hard refresh
+
+
+pip install -r requirements.txt
