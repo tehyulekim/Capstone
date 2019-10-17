@@ -108,3 +108,4 @@ venv.bak/
 .idea/
 _Note/
 downloads/*
+/static/uploads/*
