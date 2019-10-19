@@ -29,9 +29,8 @@ Path('/etc').exists()
 Path('nonexistentfile').exists()
 
 """
-import cli
+from cstore import cli
 import logging
-from pathlib import Path
 
 
 def test_f1():

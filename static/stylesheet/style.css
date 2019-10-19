@@ -248,16 +248,12 @@ th.active .arrow {
 }
 
 
-
-
-
 .router-link-active {
     background-color: darkblue;
 }
 
 
-
-input, select{
+input, select {
     font-size: 24px;
     background-color: black;
     border: medium inset darkgray;
@@ -283,11 +279,45 @@ button {
 }
 
 
-
 input[type=radio] {
     width: 24px;
     height: 24px;
 
 }
+
+input[type=checkbox] {
+    width: 24px;
+    height: 24px;
+
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.grid-container > div {
+    border: 1px solid lightgray;
+    text-align: center;
+    padding: 12px;
+}
+
+.item1 {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.item2 {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.item3 {
+  grid-column: 1 / span 2;
+  grid-row: 2;
+}
+
+
+
 
 

@@ -107,5 +107,5 @@ venv.bak/
 # idea and note
 .idea/
 _Note/
-/_Note/
-/download/
+downloads/*
+/static/uploads/*
