@@ -1,0 +1,2 @@
+product/*.py
+product/2/2-2

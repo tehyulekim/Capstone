@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 -->
-<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
   <title>Component Store</title>
@@ -47,7 +47,7 @@
       <!-- route outlet. component matched by the route will render here -->
       <router-view :key="$route.fullPath"></router-view>
     </main>
-    <aside class="aside"></aside>
+    <!--    <aside class="aside"></aside>-->
   </div>
 </div>
 
@@ -73,7 +73,7 @@
       <th v-if="cSrCol">Software Releases</th>
       <th v-if="cCol">Components</th>
       <th v-if="selectCol">Select</th>
-      <!--      {{selected_row}}-->
+      <th v-if="compareCol">Compare with Selected</th>
     </tr>
     </thead>
     <tbody v-if="!highlighted">
@@ -81,18 +81,26 @@
       <td v-for="key in columns">
         {{entry[key]}}
       </td>
-
       <td v-if="cSrCol">
         <router-link v-bind:to="'/c/' + entry.id ">Software Releases</router-link>
       </td>
       <td v-if="cCol">
         <router-link v-bind:to="'/sr/' + entry.product_name + '/' + entry.version_number">Components</router-link>
       </td>
-      <td v-if="selectCol"><label> <input type="radio"
-                                          v-bind:value="entry"
-                                          v-model="selected_row"
-                                          v-on:change="$emit('input', selected_row)"
-      > </label></td>
+      <td v-if="selectCol">
+        <label>
+          <input type="radio"
+                 v-bind:value="entry"
+                 v-model="selected_row"
+                 v-on:change="$emit('input', selected_row)">
+        </label>
+      </td>
+      <td v-if="compareCol">
+        <router-link
+            v-bind:to="'/sr/compare/' + selected_row.product_name+ '/' + selected_row.version_number  + '/' + entry.product_name + '/' + entry.version_number">
+          Compare
+        </router-link>
+      </td>
     </tr>
     </tbody>
     <tbody v-if="highlighted">
@@ -101,11 +109,14 @@
       <td v-for="key in columns">
         {{entry[key]}}
       </td>
-      <td v-if="selectCol"><label> <input type="radio"
-                                          v-bind:value="entry"
-                                          v-model="selected_row"
-                                          v-on:change="$emit('input', selected_row)"
-      > </label></td>
+      <td v-if="selectCol">
+        <label>
+          <input type="radio"
+                 v-bind:value="entry"
+                 v-model="selected_row"
+                 v-on:change="$emit('input', selected_row)">
+        </label>
+      </td>
     </tr>
     </tbody>
   </table>
@@ -119,13 +130,16 @@
 <script type="text/x-template" id="products-template">
   <div>
     <h1>Products</h1>
-    <hr/>
+    <br/>
+    CREATE :
     <label><input v-model="product_name" placeholder="Product Name"></label>
     <button v-on:click="pnew">Create Product</button>
-    <button v-on:click="pdelete">Delete Product + SR</button>
+    <!--    <button v-on:click="pdelete">Delete Product + SR</button>-->
     <span>{{ this.product_name_response.name }}</span>
 
-    <hr/>
+    <br/>
+    <br/>
+    EDIT :
     <label>
       <select v-model="product_field">
         <option v-for="option in gridColumns" v-bind:value="option">
@@ -138,7 +152,8 @@
     <button v-on:click="pedit">Edit Selected Product</button>
     <span>{{ product_edit_response.name }}</span>
 
-    <hr/>
+    <br/>
+    <br/>
     <h2>Selected: {{product_edit}}</h2>
     <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
     <table-grid
@@ -154,8 +169,9 @@
 <script type="text/x-template" id="software-releases-template">
   <div>
     <h1>Software Releases</h1>
-    <hr/>
+
     <!--    <label><input v-model="product_name" placeholder="Product Name"></label>-->
+    CREATE :
     <label>
       <select v-model="product_name">
         <option value="" disabled selected>Product Name</option>
@@ -164,27 +180,33 @@
     </label>
     <label><input v-model="version_number" placeholder="Version Number"></label>
     <button v-on:click="srnew">Create Software Release</button>
-    <button v-on:click="srdelete">Delete Software Release</button>
+    <!--    <button v-on:click="srdelete">Delete Software Release</button>-->
     <span>{{ this.server_response.name }}</span>
 
+    <br/>
+    <br/>
 
-    <hr/>
+
+    EDIT :
     <label>
       <select v-model="sr_field">
         <option value="" disabled selected>Attribute Field</option>
-        <option v-for="option in gridColumns" v-bind:value="option"> {{ option }}</option>
+        <option v-for="option in attributeField" v-bind:value="option"> {{ option }}</option>
       </select>
     </label>
     <label><input v-model="sr_value" placeholder="New Value"> </label>
     <button v-on:click="sredit">Edit Selected Software Release</button>
     <span>{{ this.sr_selected_response.name }}</span>
 
-
-    <hr/>
+    <br/>
+    <br/>
+    COPY :
     <label><input v-model="version_number_new" placeholder="New Version Number"></label>
     <button v-on:click="sr_copy">Copy Selected Software Release</button>
     <span>{{ sr_copy_response.name }}</span>
-    <hr/>
+
+    <br/>
+    <br/>
 
     <h2>Selected: {{sr_selected}}</h2>
     <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
@@ -193,21 +215,20 @@
         :columns="gridColumns"
         :filter-key="searchQuery"
         :c-col="true"
+        :compareCol="true"
         :select-col="true"
         v-model="selectedRow"
     ></table-grid>
   </div>
 </script>
+
 <script type="text/x-template" id="sr-components-template">
   <div>
     <h1>Software Release's Components</h1>
-    <h2>Product Name: {{ $route.params.product_name }}</h2>
-    <h2>Version Number: {{ $route.params.version_number }}</h2>
-
-    <hr/>
-    <button v-on:click="sr_remove_c">Remove Selected Component from SR</button>
-    <span>{{ delete_response.name }}</span>
-
+    <h2>{{ $route.params.product_name }}</h2>
+    <h2>{{ $route.params.version_number }}</h2>
+    <p>{{ recipe_json }}</p>
+    <br/>
     <h2>Selected: {{sr_selected}}</h2>
     <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
     <table-grid
@@ -218,15 +239,17 @@
         :select-col="true"
         v-model="selectedRow"
     ></table-grid>
+    <button v-on:click="sr_remove_c">Remove Selected Component from SR</button>
+    <span>{{ delete_response.name }}</span>
 
     <hr/>
-    <hr/>
 
-    <h2>Components to Add</h2>
+    <h2>All Components List</h2>
+
+    ADD :
     <label><input v-model="destination" placeholder="Destination"></label>
     <button v-on:click="sr_add_c">Add Selected Component to SR</button>
     <span>{{ add_response.name }}</span>
-
 
     <h2>Selected: {{c_selected}}</h2>
     <label><input name="query" v-model="searchQuery2" placeholder="Search Filter"> </label>
@@ -237,6 +260,46 @@
         :select-col="true"
         v-model="selectedRow2"
     ></table-grid>
+  </div>
+</script>
+<script type="text/x-template" id="sr-compare-template">
+  <div class="grid-container">
+    <div class="item1">
+      <h2>Components only in</h2>
+      <h1>{{ $route.params.product_name }}</h1>
+      <h1>{{ $route.params.version_number }}</h1>
+
+      <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
+      <table-grid style="margin-left:auto;margin-right:auto;"
+                  :rows="components1"
+                  :columns="gridColumns"
+                  :filter-key="searchQuery"
+      ></table-grid>
+    </div>
+
+    <div class="item2">
+      <h2>Components only in</h2>
+      <h1>{{ $route.params.product_name2 }}</h1>
+      <h1>{{ $route.params.version_number2 }}</h1>
+
+      <label><input name="query" v-model="searchQuery2" placeholder="Search Filter"> </label>
+      <table-grid style="margin-left:auto;margin-right:auto;"
+                  :rows="components2"
+                  :columns="gridColumns"
+                  :filter-key="searchQuery2"
+      ></table-grid>
+    </div>
+
+    <div class="item3">
+      <h2>Components in both</h2>
+
+      <label><input name="query" v-model="searchQuery3" placeholder="Search Filter"> </label>
+      <table-grid style="margin-left:auto;margin-right:auto;"
+                  :rows="components_both"
+                  :columns="gridColumns2"
+                  :filter-key="searchQuery3"
+      ></table-grid>
+    </div>
   </div>
 </script>
 
