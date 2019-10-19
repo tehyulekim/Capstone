@@ -24,6 +24,7 @@ Vue.component('table-grid', {
         selectCol: false,
         cSrCol: false,
         cCol: false,
+        compareCol: false,
         highlighted: false, // for sr_c
     },
     data: function () {
@@ -36,10 +37,7 @@ Vue.component('table-grid', {
             sortOrders: sortOrders,
 
             selected_row: {},
-            styleObject: {
-                backgroundColor: '#440'
-
-            },
+            styleObject: {backgroundColor: '#440'},
         }
     },
     computed: {
@@ -327,7 +325,7 @@ const SRComponents = {
             selectedRow2: {name: ''},
 
             // add
-            destination: ".",
+            destination: "",
             add_response: {},
 
 
@@ -400,6 +398,7 @@ const SRComponents = {
                 })
                     .then(response => {
                         this.add_response = response.data;
+                        this.cli_recipe();
                         this.sr_c();
                     })
                     .catch(error => console.log(error));
@@ -420,6 +419,7 @@ const SRComponents = {
                 })
                     .then(response => {
                         this.delete_response = response.data;
+                        this.cli_recipe();
                         this.sr_c();
                     })
                     .catch(error => console.log(error));
@@ -430,9 +430,59 @@ const SRComponents = {
     },
 
     mounted: function () {
+        this.cli_recipe();
         this.sr_c();
         this.c();
-        this.cli_recipe();
+    },
+
+};
+
+const SRCompare = {
+    template: '#sr-compare-template',
+
+    data() {
+        return {
+            // table 1
+            components1: [{}],
+            gridColumns: ["name", "version", "destination"],
+            searchQuery: '',
+
+
+            // table 2
+            components2: [{}],
+            gridColumns2: ["name", "version", "destination"],
+            searchQuery2: '',
+
+
+            // table 3 Both
+            components_both: [{}],
+            gridColumns3: ["name", "version", "destination"],
+            searchQuery3: '',
+        }
+    },
+
+    computed: {},
+
+    methods: {
+        sr_compare: function () {
+            axios.post('/sr_compare', {
+                product_name: this.$route.params.product_name,
+                version_number: this.$route.params.version_number,
+                product_name2: this.$route.params.product_name2,
+                version_number2: this.$route.params.version_number2,
+            })
+                .then(response => {
+                    this.components1 = response.data['sr1only'];
+                    this.components2 = response.data['sr2only'];
+                    this.components_both = response.data['srboth'];
+                })
+                .catch(error => console.log(error));
+        },
+
+    },
+
+    mounted: function () {
+        this.sr_compare();
     },
 
 };
@@ -505,6 +555,7 @@ const routes = [
     {path: '/p', component: Products},
     {path: '/sr', component: SoftwareReleases},
     {path: '/sr/:product_name/:version_number', component: SRComponents},
+    {path: '/sr/compare/:product_name/:version_number/:product_name2/:version_number2', component: SRCompare},
     {path: '/c', component: Components},
     {path: '/c/:id', component: ComponentSR},
 ];

@@ -1,13 +1,18 @@
 r"""
 
-# copy and paste these imports in Python Console to start querying while running app.py
+import sys; print('Python %s on %s' % (sys.version, sys.platform))
+sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])
+
+
+x# copy and paste these imports in Python Console to start querying while running app.py
+# only works within PyCharm > Python Console
 
 from app import db, Product, SoftwareRelease,Component, Association
 from sqlalchemy import func
 
 
 
-
+# USEFUL QUERIES
 
 
 

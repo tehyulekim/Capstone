@@ -4,17 +4,23 @@
 import os
 import logging
 from itertools import groupby
-from flask import Flask, request, jsonify, redirect, flash, url_for
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
-from werkzeug.utils import secure_filename
+from pathlib import Path
 
-logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
-ALLOWED_EXTENSIONS = {'txt', 'zip', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+from flask import Flask, request, jsonify, redirect, flash, url_for, render_template, abort, g
+from flask_sqlalchemy import SQLAlchemy
+from flask_uploads import UploadSet, ALL, configure_uploads
+from sqlalchemy import func
+
+logging.basicConfig(level=logging.DEBUG)  # com ment out to turn off info messages
+
+UPLOADED_ALL_DEST = 'static/uploads/'
 
 app = Flask(__name__)
+app.secret_key = b'secret_key'
 
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['UPLOADED_ALL_DEST'] = UPLOADED_ALL_DEST
+files = UploadSet('files', extensions=ALL, default_dest=lambda x: UPLOADED_ALL_DEST)
+configure_uploads(app, (files,))
 
 app.config[
     'SQLALCHEMY_DATABASE_URI'] = 'postgres://yijwjkfpucdepl:76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788@ec2-54-221-214-3.compute-1.amazonaws.com:5432/del3ceijjamsso'
@@ -505,6 +511,9 @@ def sr_add_c():
     version = req_data['version']
     destination = req_data['destination']
 
+    if destination == "":
+        destination = "."
+
     return_code = {"name": "Error"}
 
     try:
@@ -572,6 +581,67 @@ def sr_remove_c():
         return jsonify(return_code)
 
 
+
+# http://127.0.0.1:5000/sr_compare
+@app.route('/sr_compare', methods=['POST'])
+def sr_compare():
+
+    req_data = request.get_json()
+    logging.debug("req_data = " + str(req_data))
+
+    product_name = req_data['product_name']
+    version_number = req_data['version_number']
+    product_name2 = req_data['product_name2']
+    version_number2 = req_data['version_number2']
+
+    sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
+    sr2 = SoftwareRelease.query.filter_by(product_name=product_name2, version_number=version_number2).first()
+
+
+    sr_clist = []
+    if sr is not None:  # must check if sr is not NoneType
+        for a in sr.components:
+            sr_clist.append({'name': a.component.name,
+                             'version': a.component.version,
+                             'destination': a.destination})
+    
+    sr2_clist = []
+    if sr2 is not None:  # must check if sr2 is not NoneType
+        for a in sr2.components:
+            sr2_clist.append({'name': a.component.name,
+                             'version': a.component.version,
+                             'destination': a.destination})
+
+    def compare(c1, c2):
+        c2only = c2.copy()
+        c1only = []
+        cboth = []
+
+        for c in c1:
+            found = False
+            for d in c2only:
+                if c == d:
+                    cboth.append(c)
+                    c2only.remove(d)
+                    found = True
+                    break
+            if not found:
+                c1only.append(c)
+
+        return (c1only, c2only, cboth)
+
+    sr1only, sr2only, srboth = compare(sr_clist, sr2_clist)
+
+    compare_data = {
+        'sr1only': sr1only,
+        'sr2only': sr2only,
+        'srboth': srboth
+    }
+
+    return jsonify(compare_data)
+
+
+
 # cli.py API
 
 # add component
@@ -606,12 +676,22 @@ def cli_add():
 
 
 # delete component in database, also deletes associated SR contents.
-# http://127.0.0.1:5000/cli_delete
-@app.route('/cli_delete', methods=['POST'])
-def cli_delete():
+# http://127.0.0.1:5000/cli_delete_c
+@app.route('/cli_delete_c', methods=['POST'])
+def cli_delete_c():
     req_data = request.get_json()  # <class 'dict'>
     name = req_data['name']
     version = req_data['version']
+
+
+
+    name_path = Path(name)  # converts name string to Path.  1/2/3/name  =>  1\2\3\name
+    name_parent = name_path.parent  # parent directory    1\2\3
+    name_name = name_path.name  # file name without parent directory.  name
+    name_zip = name_name + "--v" + str(version) + ".zip"  # name--v1.2.3.4.zip
+    name_path_zip = name_parent.joinpath(name_zip).as_posix()  # 1/2/3/name--v1.2.3.4.zip
+
+    object_path = Path(UPLOADED_ALL_DEST + name_path_zip)
 
     component = Component.query.filter_by(name=name, version=version).first()
 
@@ -621,9 +701,12 @@ def cli_delete():
         try:
             db.session.delete(component)
             db.session.commit()
-            return_code['name'] = "Success"
 
             # also need to delete in Storage
+            if object_path.exists():
+                object_path.unlink()
+
+            return_code['name'] = "Success"
 
         except:
             db.session.rollback()
@@ -699,46 +782,42 @@ def cli_recipe():
         return jsonify(recipe)
 
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# http://127.0.0.1:5000/upload
+@app.route('/upload', methods=['POST'])
+def upload():
+    logging.debug("request.form['file_name'] = " + str(request.form['file_name']))
+
+    filename = files.save(request.files['file'], name=request.form['file_name'])
+    return "uploaded to " + UPLOADED_ALL_DEST + filename
 
 
-@app.route('/u', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also submit an empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('upload_file', filename=filename))
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''
+# http://127.0.0.1:5000/download
+@app.route('/download', methods=['GET', 'POST'])
+def download():
+    req_data = request.get_data()
+    logging.debug("request.form['file_name'] = " + str(request.form['file_name']))
+
+    filename = files.save(request.files['file'], name=request.form['file_name'])
+    return UPLOADED_ALL_DEST + filename
 
 
 # return request json data. For testing
 @app.route('/5', methods=['POST', 'GET'])
 def f5():
     if request.method == 'POST':
-        logging.debug("request.data = " + str(request.data))
+        logging.debug("request.get_data() = " + str(request.get_data()))
         logging.debug("request.get_json() = " + str(request.get_json()))
         return jsonify(request.get_json())
     return "f5"
+
+
+@app.route('/6', methods=['POST', 'GET'])
+def f6():
+    if request.method == 'POST':
+        logging.debug("request.get_data() = " + str(request.get_data()))
+        logging.debug("request.form['stnw'] = " + str(request.form['stnw']))
+        return request.get_data()
+    return "f6"
 
 
 if __name__ == '__main__':
