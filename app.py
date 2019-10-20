@@ -1,7 +1,7 @@
 ""r"""
 
 """
-import os
+
 import logging
 from itertools import groupby
 from pathlib import Path

@@ -1,22 +1,41 @@
 # Capstone
 
-app.py
-cstore/cli.py
-
-$ python cstore/cli.py
-
-Use pip to install your project in the virtual environment.
-$ pip install -e .
+Documentation
+https://docs.google.com/document/d/1Bk93d6hzIelxp0k5y5PWO3843b6XZpowNytblO-USoI/edit?usp=sharing
 
 
-Go to folder with setup.py
+-------------
+Download and extract ZIP
+
+
+To install requirements
+
+$ pip install -r requirements.txt
+
+
+To run server
+
+$ python app.py
+
+
+
+Install cstore (Command Line Interface Client). Go to root folder Capstone
+
 $ pip install .
 
+After installation, you can run cstore from any folder
+
+$ cstore < function > 
+
+
+
+
+For remote deployment
 
 https://capstoneherokuapp.herokuapp.com/
+
 CTRL Reload to hard refresh
 
 
-pip install -r requirements.txt
 
 
