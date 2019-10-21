@@ -322,6 +322,7 @@
     <h3>Component ID: {{ $route.params.id }}</h3>
 
     <!-- sr list from sr -->
+    <label><input name="query" v-model="searchQuery" placeholder="Search Filter"> </label>
     <table-grid
         :rows="gridData"
         :columns="gridColumns"
