@@ -124,7 +124,7 @@ def store(name, version, *args):
     return True
 
 
-def retrieve(name, version, destination='.'):
+def retrieve(name, version, destination='.', output_folder=OUTPUT_FOLDER):
     """
     Retrieve a Component
     Download and Extract Component
@@ -162,7 +162,7 @@ def retrieve(name, version, destination='.'):
     name_path_zip = name_parent.joinpath(name_zip).as_posix()  # 1/2/3/name--v1.2.3.4.zip
 
     # download_folder/name_path.parent/destination
-    extract_path = OUTPUT_FOLDER.joinpath(name_parent).joinpath(destination)
+    extract_path = output_folder.joinpath(name_parent).joinpath(destination)
 
     try:
         # Download
@@ -182,12 +182,12 @@ def retrieve(name, version, destination='.'):
         if Path(name_zip).exists():
             Path(name_zip).unlink()
 
-    logging.info(name_zip + " is downloaded and extracted to: " + str(destination))
+    logging.info(name_zip + " is downloaded and extracted to: " + str(output_folder))
 
     return True
 
 
-def assemble(product_name, version_number=""):
+def assemble(product_name, version_number="", output_folder = r"./downloads"):
     """
     Assemble Software Release recipe
     Recipe Download and Extract
@@ -206,14 +206,16 @@ def assemble(product_name, version_number=""):
     recipe = get_recipe(str(product_name), str(version_number))
     logging.debug("recipe = " + str(recipe))
 
-    if OUTPUT_FOLDER.exists() and len(list(OUTPUT_FOLDER.iterdir())) > 0:
+    output_folder = Path(str(output_folder))
+
+    if output_folder.exists() and len(list(output_folder.iterdir())) > 0:
         return "Output folder is not empty"
 
     if recipe['code'] == '200':
         logging.info("received recipe, assembling")
         for component in recipe['components']:
             print(component)
-            retrieve(component['name'], component['version'], component['destination'])
+            retrieve(component['name'], component['version'], component['destination'], output_folder)
         return 'Success'
     else:
         return "Failure Error code: " + recipe['code']
