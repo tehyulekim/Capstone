@@ -753,7 +753,7 @@ def cli_recipe():
     product_name = req_data['product_name']
     version_number = req_data['version_number']
 
-    if version_number is "":
+    if version_number == "":
         # get highest version number for recipe
         version_number = \
             db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name=product_name).first()[0]
