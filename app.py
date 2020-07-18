@@ -1,4 +1,10 @@
 ""r"""
+Flask application
+$ python app.py
+
+p = Product
+sr = Software Release
+c = Component
 
 """
 import os
@@ -228,19 +234,19 @@ def pnew():
 
     name = req_data['name']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         p_new = Product(name=name)
         db.session.add(p_new)
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # http://127.0.0.1:5000/pdelete
@@ -251,19 +257,19 @@ def pdelete():
 
     name = req_data['name']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         p_delete = Product.query.filter_by(name=name).first()
         db.session.delete(p_delete)
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # http://127.0.0.1:5000/pedit
@@ -276,7 +282,8 @@ def pedit():
     field = req_data['field']
     value = req_data['value']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": """Fail. Cannot edit a Product that was linked by a Software Release. 
+    Please unlink this product from all Software Release's product_name and use cstore to delete this product and create a new product."""}
 
     try:
         # p_delete = Product.query.filter_by(name=name).first()
@@ -286,13 +293,13 @@ def pedit():
         # exec() has security problems, use setattr()
         setattr(p_edit, field, value)
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # software release all
@@ -322,19 +329,19 @@ def srnew():
     product_name = req_data['product_name']
     version_number = req_data['version_number']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         sr_new = SoftwareRelease(product_name=product_name, version_number=version_number)
         db.session.add(sr_new)
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # http://127.0.0.1:5000/srdelete
@@ -346,19 +353,19 @@ def srdelete():
     product_name = req_data['product_name']
     version_number = req_data['version_number']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         sr_delete = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
         db.session.delete(sr_delete)
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # http://127.0.0.1:5000/sredit
@@ -372,7 +379,7 @@ def sredit():
     field = req_data['field']
     value = req_data['value']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         # p_delete = Product.query.filter_by(name=name).first()
@@ -381,13 +388,13 @@ def sredit():
         # exec("sr_edit." + field + " = '" + value + "'")  # sr_edit.field = 'value'
         setattr(sr_edit, field, value)
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # makes sr deep copy with different version. Copy and paste description from requirements
@@ -411,7 +418,7 @@ def sr_copy():
     version_number = req_data['version_number']
     version_number_new = req_data['version_number_new']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         # create new association
@@ -427,13 +434,13 @@ def sr_copy():
             sr_new.components.append(a_new)
 
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # http://127.0.0.1:5000/sr_c
@@ -522,7 +529,7 @@ def sr_add_c():
     if destination == "":
         destination = "."
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         # create new association
@@ -534,13 +541,13 @@ def sr_add_c():
         sr.components.append(a)
 
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # http://127.0.0.1:5000/sr_remove_c
@@ -569,7 +576,7 @@ def sr_remove_c():
     version = req_data['version']
     destination = req_data['destination']
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     try:
         # create new association
@@ -580,13 +587,13 @@ def sr_remove_c():
         db.session.delete(a)
 
         db.session.commit()
-        return_code['name'] = "Success"
+        outcome['name'] = "Success"
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return jsonify(return_code)
+        return jsonify(outcome)
 
 
 # http://127.0.0.1:5000/sr_compare
@@ -662,7 +669,7 @@ def cli_add():
 
     # check if exist
     if query_component is not None:
-        return "409 Conflict. Component already exists"
+        return "409 Conflict. Component already exists", 409
 
     # add component
 
@@ -670,13 +677,13 @@ def cli_add():
         component_new = Component(name=name, version=version)
         db.session.add(component_new)
         db.session.commit()
-        return "201 Created. Component is added"
+        return "201 Created. Component is added", 201
     except:
         db.session.rollback()
         raise
     finally:
         db.session.close()
-        return "500 Unknown error"
+        return "500 Unknown error", 500
 
 
 # delete component in database, also deletes associated SR contents.
@@ -697,7 +704,7 @@ def cli_delete_c():
 
     component = Component.query.filter_by(name=name, version=version).first()
 
-    return_code = {"name": "Error"}
+    outcome = {"name": "Fail"}
 
     if component is not None:
         try:
@@ -708,7 +715,7 @@ def cli_delete_c():
             if object_path.exists():
                 object_path.unlink()
 
-            return_code['name'] = "Success"
+            outcome['name'] = "Success"
 
         except:
             db.session.rollback()
@@ -716,7 +723,7 @@ def cli_delete_c():
         finally:
             db.session.close()
 
-    return jsonify(return_code), 400
+    return jsonify(outcome)
 
 
 # check component's existence in database
@@ -731,9 +738,9 @@ def cli_exist():
 
     # check if exist
     if query_component is not None:
-        return "409 Conflict. Component already exists"
+        return "409 Conflict. Component already exists", 409
 
-    return "404 Not Found. Component does not exist"
+    return "404 Not Found. Component does not exist", 404
 
 
 # complete recipe list for cli
@@ -778,10 +785,10 @@ def cli_recipe():
             'status': sr.status,
             'components': clist}
 
-        return jsonify(recipe)
+        return jsonify(recipe), 200
 
     else:
-        return jsonify(recipe)
+        return jsonify(recipe), 404
 
 
 # http://127.0.0.1:5000/upload
@@ -810,7 +817,7 @@ def f5():
         logging.debug("request.get_data() = " + str(request.get_data()))
         logging.debug("request.get_json() = " + str(request.get_json()))
         return jsonify(request.get_json())
-    return "f5"
+    return "f5", 400
 
 
 @app.route('/6', methods=['POST', 'GET'])
@@ -819,7 +826,7 @@ def f6():
         logging.debug("request.get_data() = " + str(request.get_data()))
         logging.debug("request.form['stnw'] = " + str(request.form['stnw']))
         return request.get_data()
-    return "f6"
+    return "f6", 404
 
 
 if __name__ == '__main__':
