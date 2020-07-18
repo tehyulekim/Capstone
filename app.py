@@ -1,7 +1,7 @@
 ""r"""
 
 """
-
+import os
 import logging
 from itertools import groupby
 from pathlib import Path
@@ -13,17 +13,22 @@ from sqlalchemy import func
 
 logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
 
-UPLOADED_ALL_DEST = 'static/uploads/'
-
 app = Flask(__name__)
-app.secret_key = b'zipQPbPdyS0ROphXZFbpYwb28-41vWWfZDSFBmo0rjo'
 
+# Upload folder destination
+UPLOADED_ALL_DEST = 'static/uploads/'
 app.config['UPLOADED_ALL_DEST'] = UPLOADED_ALL_DEST
 files = UploadSet('files', extensions=ALL, default_dest=lambda x: UPLOADED_ALL_DEST)
 configure_uploads(app, (files,))
 
-app.config[
-    'SQLALCHEMY_DATABASE_URI'] = 'postgres://yijwjkfpucdepl:76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788@ec2-54-221-214-3.compute-1.amazonaws.com:5432/del3ceijjamsso'
+# must configure environment variables
+# https://devcenter.heroku.com/articles/config-vars
+
+# $ export SECRET_KEY='randomly_generated_string_using_python_function__secrets.token_urlsafe()'
+app.secret_key = os.environ.get('SECRET_KEY')
+
+# $ export DATABASE_URL='[DB_TYPE]+[DB_CONNECTOR]://[USERNAME]:[PASSWORD]@[HOST]:[PORT]/[DB_NAME]'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '')
 
 db = SQLAlchemy(app)
 
