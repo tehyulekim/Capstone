@@ -1,7 +1,7 @@
 ""r"""
 
 """
-
+import os
 import logging
 from itertools import groupby
 from pathlib import Path
@@ -11,19 +11,24 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_uploads import UploadSet, ALL, configure_uploads
 from sqlalchemy import func
 
-logging.basicConfig(level=logging.DEBUG)  # com ment out to turn off info messages
-
-UPLOADED_ALL_DEST = 'static/uploads/'
+logging.basicConfig(level=logging.DEBUG)  # comment out to turn off info messages
 
 app = Flask(__name__)
-app.secret_key = b'secret_key'
 
+# Upload folder destination
+UPLOADED_ALL_DEST = 'static/uploads/'
 app.config['UPLOADED_ALL_DEST'] = UPLOADED_ALL_DEST
 files = UploadSet('files', extensions=ALL, default_dest=lambda x: UPLOADED_ALL_DEST)
 configure_uploads(app, (files,))
 
-app.config[
-    'SQLALCHEMY_DATABASE_URI'] = 'postgres://yijwjkfpucdepl:76e1c9f816bb03c73393508f6dac75f411a56105e74c2b14ebd9a8fc87025788@ec2-54-221-214-3.compute-1.amazonaws.com:5432/del3ceijjamsso'
+# must configure environment variables
+# https://devcenter.heroku.com/articles/config-vars
+
+# $ export SECRET_KEY='randomly_generated_string_using_python_function__secrets.token_urlsafe()'
+app.secret_key = os.environ.get('SECRET_KEY')
+
+# $ export DATABASE_URL='[DB_TYPE]+[DB_CONNECTOR]://[USERNAME]:[PASSWORD]@[HOST]:[PORT]/[DB_NAME]'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '')
 
 db = SQLAlchemy(app)
 
@@ -105,7 +110,7 @@ def view():
         alist.append(
             a.software_release.product_name + "v" + a.software_release.version_number + "_" + a.component.name + "v" + a.component.version)
 
-    viewall = {
+    view_all = {
         "Product": str(plist),
         "SoftwareRelease": str(slist),
         "Component": str(clist),
@@ -113,7 +118,7 @@ def view():
         "Association": str(alist)
     }
 
-    return jsonify(viewall)
+    return jsonify(view_all)
 
 
 # returns list of all components
@@ -277,7 +282,9 @@ def pedit():
         # p_delete = Product.query.filter_by(name=name).first()
         # db.session.delete(p_delete)
         p_edit = Product.query.filter_by(name=name).first()
-        exec("p_edit." + field + " = '" + value + "'")  # p_edit.field = 'value'
+        # exec("p_edit." + field + " = '" + value + "'")  # p_edit.field = 'value'
+        # exec() has security problems, use setattr()
+        setattr(p_edit, field, value)
         db.session.commit()
         return_code['name'] = "Success"
     except:
@@ -371,7 +378,8 @@ def sredit():
         # p_delete = Product.query.filter_by(name=name).first()
         # db.session.delete(p_delete)
         sr_edit = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
-        exec("sr_edit." + field + " = '" + value + "'")  # sr_edit.field = 'value'
+        # exec("sr_edit." + field + " = '" + value + "'")  # sr_edit.field = 'value'
+        setattr(sr_edit, field, value)
         db.session.commit()
         return_code['name'] = "Success"
     except:
@@ -581,11 +589,9 @@ def sr_remove_c():
         return jsonify(return_code)
 
 
-
 # http://127.0.0.1:5000/sr_compare
 @app.route('/sr_compare', methods=['POST'])
 def sr_compare():
-
     req_data = request.get_json()
     logging.debug("req_data = " + str(req_data))
 
@@ -597,20 +603,19 @@ def sr_compare():
     sr = SoftwareRelease.query.filter_by(product_name=product_name, version_number=version_number).first()
     sr2 = SoftwareRelease.query.filter_by(product_name=product_name2, version_number=version_number2).first()
 
-
     sr_clist = []
     if sr is not None:  # must check if sr is not NoneType
         for a in sr.components:
             sr_clist.append({'name': a.component.name,
                              'version': a.component.version,
                              'destination': a.destination})
-    
+
     sr2_clist = []
     if sr2 is not None:  # must check if sr2 is not NoneType
         for a in sr2.components:
             sr2_clist.append({'name': a.component.name,
-                             'version': a.component.version,
-                             'destination': a.destination})
+                              'version': a.component.version,
+                              'destination': a.destination})
 
     def compare(c1, c2):
         c2only = c2.copy()
@@ -639,7 +644,6 @@ def sr_compare():
     }
 
     return jsonify(compare_data)
-
 
 
 # cli.py API
@@ -683,8 +687,6 @@ def cli_delete_c():
     name = req_data['name']
     version = req_data['version']
 
-
-
     name_path = Path(name)  # converts name string to Path.  1/2/3/name  =>  1\2\3\name
     name_parent = name_path.parent  # parent directory    1\2\3
     name_name = name_path.name  # file name without parent directory.  name
@@ -714,7 +716,7 @@ def cli_delete_c():
         finally:
             db.session.close()
 
-    return jsonify(return_code)
+    return jsonify(return_code), 400
 
 
 # check component's existence in database
@@ -753,7 +755,7 @@ def cli_recipe():
     product_name = req_data['product_name']
     version_number = req_data['version_number']
 
-    if version_number is "":
+    if version_number == "":
         # get highest version number for recipe
         version_number = \
             db.session.query(func.max(SoftwareRelease.version_number)).filter_by(product_name=product_name).first()[0]

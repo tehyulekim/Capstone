@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='cstore',
-    version='1.0',
+    version='1.1.1',
     description='Component Store Command Line Client',
     packages=setuptools.find_packages(),
     scripts=['bin/cstore'],
@@ -15,7 +15,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.7.4',
+    python_requires='>=3.8.4',
     zip_safe=False,
     install_requires=[
         'fire',
