@@ -184,7 +184,7 @@ const SoftwareReleases = {
             version_number_new: "",
             sr_copy_response: {},
 
-            attributeField: ["version_number", "status"],
+            attributeField: ["product_name", "version_number", "status"],
             gridColumns: ["id", "product_name", "version_number", "status"],
 
             searchQuery: '',

@@ -27,15 +27,15 @@ SERVER_URL = 'http://127.0.0.1:5000'
 OUTPUT_FOLDER = Path(r"./downloads")
 
 
-# Store a component, previously cu()
 def store(name, version, *args):
     """
-    Compress and Upload Component
+    Store a component
+    previously named cu() Compress and Upload Component
 
-    $ python cli.py cu <name> <version> <*files>
+    $ python cli.py store <name> <version> <*files>
 
     Example:
-        $ python cli.py cu z 1 folder1 README.md
+        $ python cli.py store z 1 folder1 README.md
     will create z--v1.zip containing folder1 and README.md
 
     $ python cli.py cu product/c0 1 product/0.txt
@@ -124,41 +124,12 @@ def store(name, version, *args):
     return True
 
 
-# recipe download and extract, previously rde()
-def assemble(product_name, version_number=""):
+def retrieve(name, version, destination='.', output_folder=OUTPUT_FOLDER):
     """
-    Recipe Download and Extract
-
-    $ python cli.py rde <product> <version>
-
-    Example: finds recipe with product named product1 and version 1.2.3.4
-    And downloads the components in the recipe list and extracts in folder specified by de() function
-    $ python cli.py rde product1 1.2.3.4
-
-    :param product_name:
-    :param version_number:
-    :return:
-    """
-    recipe = get_recipe(str(product_name), str(version_number))
-    logging.debug("recipe = " + str(recipe))
-
-    if OUTPUT_FOLDER.exists() and len(list(OUTPUT_FOLDER.iterdir())) > 0:
-        return "Output folder is not empty"
-
-    if recipe['code'] == '200':
-        logging.info("received recipe, assembling")
-        for component in recipe['components']:
-            print(component)
-            retrieve(component['name'], component['version'], component['destination'])
-        return 'Success'
-    else:
-        return "Failure Error code: " + recipe['code']
-
-
-# Retrieve a Component. component download and extract to target directory, previously de()
-def retrieve(name, version, destination='.'):
-    """
+    Retrieve a Component
     Download and Extract Component
+    # Retrieve a Component. component download and extract to target directory, previously named de()
+
 
     def de(name, version, target_dir='./download/product'):
 
@@ -191,7 +162,7 @@ def retrieve(name, version, destination='.'):
     name_path_zip = name_parent.joinpath(name_zip).as_posix()  # 1/2/3/name--v1.2.3.4.zip
 
     # download_folder/name_path.parent/destination
-    extract_path = OUTPUT_FOLDER.joinpath(name_parent).joinpath(destination)
+    extract_path = output_folder.joinpath(name_parent).joinpath(destination)
 
     try:
         # Download
@@ -211,9 +182,43 @@ def retrieve(name, version, destination='.'):
         if Path(name_zip).exists():
             Path(name_zip).unlink()
 
-    logging.info(name_zip + " is downloaded and extracted to: " + str(destination))
+    logging.info(name_zip + " is downloaded and extracted to: " + str(output_folder))
 
     return True
+
+
+def assemble(product_name, version_number="", output_folder = r"./downloads"):
+    """
+    Assemble Software Release recipe
+    Recipe Download and Extract
+    previously named rde()
+
+    $ python cli.py assemble <product> <version>
+
+    Example: finds recipe with product named product1 and version 1.2.3.4
+    And downloads the components in the recipe list and extracts in folder specified by de() function
+    $ python cli.py rde product1 1.2.3.4
+
+    :param product_name:
+    :param version_number:
+    :return:
+    """
+    recipe = get_recipe(str(product_name), str(version_number))
+    logging.debug("recipe = " + str(recipe))
+
+    output_folder = Path(str(output_folder))
+
+    if output_folder.exists() and len(list(output_folder.iterdir())) > 0:
+        return "Output folder is not empty"
+
+    if recipe['code'] == '200':
+        logging.info("received recipe, assembling")
+        for component in recipe['components']:
+            print(component)
+            retrieve(component['name'], component['version'], component['destination'], output_folder)
+        return 'Success'
+    else:
+        return "Failure Error code: " + recipe['code']
 
 
 # commandline zipfile source code modified from zipfile.py in https://docs.python.org/3/library/zipfile.html
@@ -269,6 +274,12 @@ def list_zip(src):
 
 
 def upload(file_name, object_name=None):
+    """
+
+    :param file_name:
+    :param object_name:
+    :return:
+    """
     if object_name is None:
         object_name = file_name
 
@@ -460,7 +471,7 @@ def delete_sr(product_name, version_number):
 
 def get_recipe(product_name, version_number=""):
     """
-    Get Recipe
+    Get Recipe in JSON
     :param product_name:
     :param version_number:
     :return:
@@ -475,11 +486,13 @@ def get_recipe(product_name, version_number=""):
     return recipe
 
 
+# testing functions
 def f1(*args):
     print("args = " + str(args))
     for a in args:
         if type(a) == str:
             print('str: ' + a)
+            return a
         if type(a) == list:
             print('list: ' + str(a))
 
