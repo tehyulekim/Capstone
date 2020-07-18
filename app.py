@@ -292,7 +292,7 @@ def pedit():
         raise
     finally:
         db.session.close()
-        return jsonify(return_code), 409
+        return jsonify(return_code)
 
 
 # software release all
@@ -387,7 +387,7 @@ def sredit():
         raise
     finally:
         db.session.close()
-        return jsonify(return_code), 409
+        return jsonify(return_code)
 
 
 # makes sr deep copy with different version. Copy and paste description from requirements
